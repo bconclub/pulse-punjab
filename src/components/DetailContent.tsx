@@ -6,6 +6,7 @@ import { Feather } from '@expo/vector-icons';
 import { Txt, Divider } from './ui';
 import MetricGrid from './MetricGrid';
 import AgeBars from './AgeBars';
+import DistrictIntel from './DistrictIntel';
 import { byNo, framework } from '../data';
 import { winnerOf } from '../lib/geo';
 import { party as PARTY, colors, radius, space } from '../theme';
@@ -91,7 +92,12 @@ export default function DetailContent({
         </View>
       )}
 
-      <View style={{ height: 14 }} />
+      <DistrictIntel district={c.district} lha={c.lha} />
+
+      <Divider />
+      <Txt size={11} weight="bold" dim style={styles.section}>
+        CAMPAIGN PULSE
+      </Txt>
       <MetricGrid p={p} />
       <AgeBars age={p.age} />
 

@@ -4,6 +4,7 @@ import React from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Txt } from './ui';
+import TricolorBar from './TricolorBar';
 import MapCanvas from './MapCanvas';
 import ColorModeBar from './ColorModeBar';
 import Legend from './Legend';
@@ -55,6 +56,7 @@ export default function DesktopLayout({
             <Feather name="bell" size={16} color={colors.textDim} />
           </Pressable>
         </View>
+        <TricolorBar />
 
         <View style={styles.cmWrap}>
           <Txt size={10} weight="bold" faint style={{ letterSpacing: 0.6, marginLeft: 16, marginBottom: 6 }}>
@@ -148,8 +150,6 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    borderBottomWidth: 2,
-    borderBottomColor: colors.accent,
   },
   mark: {
     width: 32,

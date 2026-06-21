@@ -32,6 +32,19 @@ export const colors = {
   white: '#FFFFFF',
 };
 
+// The Indian tricolor — the "lehar"/wave motif from the deck (page 1 background +
+// bus wraps). Used as the signature accent (header wave, section flags).
+export const india = {
+  saffron: '#FC7404',
+  white: '#FFFFFF',
+  green: '#4EB457',
+  greenDeep: '#1F8A3B',
+  blue: '#003C90',
+};
+
+/** Tricolor gradient stops (saffron → white → green) for the lehar accent. */
+export const TRICOLOR = ['#FC7404', '#FFFFFF', '#4EB457'];
+
 /** Party colors brightened for legibility on the dark map. */
 export const party: Record<string, string> = {
   AAP: '#2A93D6',

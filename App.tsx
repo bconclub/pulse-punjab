@@ -16,6 +16,7 @@ import {
 import { Sora_700Bold } from '@expo-google-fonts/sora';
 
 import { Txt } from './src/components/ui';
+import TricolorBar from './src/components/TricolorBar';
 import MapCanvas from './src/components/MapCanvas';
 import ColorModeBar from './src/components/ColorModeBar';
 import Legend from './src/components/Legend';
@@ -126,6 +127,7 @@ export default function App() {
             <Feather name="bell" size={18} color={colors.textDim} />
           </Pressable>
         </View>
+        <TricolorBar />
 
         {/* Stat strip (map tab only) */}
         {tab === 'map' && (
@@ -228,8 +230,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: 2,
-    borderBottomColor: colors.accent,
   },
   brand: { flexDirection: 'row', alignItems: 'center', gap: 11 },
   mark: {
