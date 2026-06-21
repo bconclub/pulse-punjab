@@ -84,8 +84,12 @@ function heatColor(v) {
 
 function partyColor(no) {
   const w = results?.winners?.[no];
-  if (!w) return "#dfe5ec"; // no per-seat winner data yet (neutral grey)
-  return (results.parties.find(p => p.id === w) || {}).color || "#dfe5ec";
+  if (!w) return "#dfe5ec";
+  return (results.parties.find(p => p.id === w.party) || {}).color || "#dfe5ec";
+}
+
+function winnerOf(no) {
+  return results?.winners?.[no] || null;
 }
 
 function fillFor(c) {
@@ -109,8 +113,10 @@ function featureStyle(no) {
 
 function popupHtml(c) {
   const d = store[c.no] || {};
+  const w = winnerOf(c.no);
   const lines = [];
   if (d.mla) lines.push(`MLA: ${d.mla}${d.party ? " (" + d.party + ")" : ""}`);
+  else if (w) lines.push(`2022 MLA: ${w.winner} (${w.party})`);
   if (d.contact) lines.push(`☎ ${d.contact}`);
   if (d.pins) lines.push(`PIN: ${d.pins}`);
   const p = pulse[c.no];
@@ -203,7 +209,9 @@ function openDetail(no) {
   if (prev && prev !== no) refreshFeature(prev);
   refreshFeature(no);
   el("d-name").textContent = `${c.no}. ${c.name}`;
-  el("d-meta").textContent = `${c.district} district · ${c.lha} (Lok Sabha)${c.reserved ? " · " + c.reserved + " reserved" : ""}`;
+  const w2022 = winnerOf(no);
+  const winnerLine = w2022 ? ` · 2022: ${w2022.winner} (${w2022.party})` : "";
+  el("d-meta").textContent = `${c.district} district · ${c.lha} (Lok Sabha)${c.reserved ? " · " + c.reserved + " reserved" : ""}${winnerLine}`;
 
   renderPulse(no);
   renderScanFeatures();
@@ -481,7 +489,7 @@ function renderLegend() {
     title = "2022 result · seats";
     rows = results.parties.map(p =>
       `<div class="lg-row"><span class="sw" style="background:${p.color}"></span><b>${p.seats}</b><span>${p.name}</span></div>`).join("");
-    rows += `<div class="lg-note">Per-seat fill needs verified winners — currently neutral.</div>`;
+    rows += `<div class="lg-note">Source: ECI results, 10 Mar 2022</div>`;
   } else if (colorMode === "priority") {
     title = "Priority focus";
     rows = [["P1", "Frontline"], ["P2", "Mobilization"], ["P3", "Conversion"]]
