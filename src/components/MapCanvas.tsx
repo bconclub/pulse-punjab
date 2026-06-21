@@ -1,5 +1,6 @@
-/** Native choropleth — all 117 constituency polygons on a dark map. */
-import React, { useMemo } from 'react';
+/** Native choropleth — all 117 constituency polygons on a dark map.
+ *  Tap a seat to zoom to it; tap empty map to zoom out / deselect. */
+import React, { useEffect, useMemo, useRef } from 'react';
 import { StyleSheet, Platform } from 'react-native';
 import MapView, { Polygon, Region } from 'react-native-maps';
 import { polygons, fillFor, type ColorMode } from '../lib/geo';
@@ -14,6 +15,10 @@ const PUNJAB: Region = {
   longitudeDelta: 2.8,
 };
 
+const byNoCoords: Record<number, { latitude: number; longitude: number }[]> = Object.fromEntries(
+  polygons.map((p) => [p.no, p.coords]),
+);
+
 type Props = {
   pulse: Record<number, Pulse>;
   colorMode: ColorMode;
@@ -22,6 +27,9 @@ type Props = {
 };
 
 export default function MapCanvas({ pulse, colorMode, activeNo, onSelect }: Props) {
+  const mapRef = useRef<MapView>(null);
+  const lastSeatTap = useRef(0);
+
   // Recompute fills only when mode / data / selection change.
   const styled = useMemo(
     () =>
@@ -32,8 +40,23 @@ export default function MapCanvas({ pulse, colorMode, activeNo, onSelect }: Prop
     [colorMode, pulse],
   );
 
+  // Zoom to the selected seat; zoom back out to all of Punjab when cleared.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (activeNo != null && byNoCoords[activeNo]) {
+      map.fitToCoordinates(byNoCoords[activeNo], {
+        edgePadding: { top: 90, right: 70, bottom: 90, left: 70 },
+        animated: true,
+      });
+    } else {
+      map.animateToRegion(PUNJAB, 420);
+    }
+  }, [activeNo]);
+
   return (
     <MapView
+      ref={mapRef}
       style={StyleSheet.absoluteFill}
       initialRegion={PUNJAB}
       customMapStyle={DARK_MAP_STYLE}
@@ -43,6 +66,11 @@ export default function MapCanvas({ pulse, colorMode, activeNo, onSelect }: Prop
       toolbarEnabled={false}
       showsBuildings={false}
       mapType={Platform.OS === 'android' ? 'standard' : 'mutedStandard'}
+      onPress={() => {
+        // Ignore the map tap that rides along with a polygon tap.
+        if (Date.now() - lastSeatTap.current < 300) return;
+        onSelect(-1);
+      }}
     >
       {styled.map((p) => {
         const active = p.no === activeNo;
@@ -54,7 +82,10 @@ export default function MapCanvas({ pulse, colorMode, activeNo, onSelect }: Prop
             strokeColor={active ? colors.accent : 'rgba(255,255,255,0.35)'}
             strokeWidth={active ? 2.5 : 0.6}
             tappable
-            onPress={() => onSelect(p.no)}
+            onPress={() => {
+              lastSeatTap.current = Date.now();
+              onSelect(p.no);
+            }}
             zIndex={active ? 10 : 1}
           />
         );
