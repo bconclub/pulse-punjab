@@ -9,16 +9,19 @@ import Constants from 'expo-constants';
 import { colors } from '../theme';
 import { api } from './api';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+if (Platform.OS !== 'web') {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+    }),
+  });
+}
 
 export async function registerForPush(no?: number): Promise<string | null> {
+  if (Platform.OS === 'web') return null;
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('default', {
       name: 'Campaign updates',
@@ -53,8 +56,24 @@ export async function registerForPush(no?: number): Promise<string | null> {
   }
 }
 
-/** Fire an immediate local notification — used by the journey demo + test button. */
+/** Fire an immediate local notification — used by the journey demo + test button.
+ *  On web, falls back to the browser Notification API. */
 export async function sendLocal(title: string, body: string) {
+  if (Platform.OS === 'web') {
+    try {
+      const N = (globalThis as any).Notification;
+      if (N) {
+        if (N.permission === 'granted') new N(title, { body });
+        else if (N.permission !== 'denied') {
+          const perm = await N.requestPermission();
+          if (perm === 'granted') new N(title, { body });
+        }
+      }
+    } catch {
+      /* no-op on web */
+    }
+    return;
+  }
   await Notifications.scheduleNotificationAsync({
     content: { title, body, sound: true },
     trigger: null,
