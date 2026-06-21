@@ -56,7 +56,7 @@ export default function App() {
   const isDesktop = width >= 960;
 
   const [tab, setTab] = useState<Tab>('map');
-  const [colorMode, setColorMode] = useState<ColorMode>('engagement');
+  const [colorMode, setColorMode] = useState<ColorMode>('grievances');
   const [pulse, setPulse] = useState<Record<number, Pulse>>({});
   const [activeNo, setActiveNo] = useState<number | null>(null);
   const [overlay, setOverlay] = useState<null | 'program' | 'journey'>(null);

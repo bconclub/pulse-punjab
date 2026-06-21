@@ -75,6 +75,11 @@ export const YOUTH_RAMP = [
   '#52C698', '#7FDAB4', '#A8ECCE',
 ];
 
+/** Grievance load ramp — low (calm green) → high (alarm red). */
+export const GRIEV_RAMP = [
+  '#2FD08A', '#8AD16A', '#D8C544', '#F0A93A', '#F0743A', '#F2545B',
+];
+
 /** Age-band segment colors for the detail stacked bar — youth bands warm
  *  (brand orange), older bands cool blue; all tuned to read on blue cards. */
 export const AGE_COLORS = [

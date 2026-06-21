@@ -7,6 +7,7 @@ import { Txt, Divider } from './ui';
 import MetricGrid from './MetricGrid';
 import AgeBars from './AgeBars';
 import DistrictIntel from './DistrictIntel';
+import GrievanceList from './GrievanceList';
 import { byNo, framework } from '../data';
 import { winnerOf } from '../lib/geo';
 import { party as PARTY, colors, radius, space } from '../theme';
@@ -100,6 +101,9 @@ export default function DetailContent({
       </Txt>
       <MetricGrid p={p} />
       <AgeBars age={p.age} />
+
+      <Divider />
+      <GrievanceList no={c.no} district={c.district} />
 
       <Divider />
       <Txt size={11} weight="bold" dim style={styles.section}>

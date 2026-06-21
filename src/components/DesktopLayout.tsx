@@ -85,19 +85,24 @@ export default function DesktopLayout({
         </View>
       </View>
 
-      {/* CENTER — map */}
+      {/* CENTER — map (full-bleed; stats + legend float over it) */}
       <View style={styles.center}>
-        <View style={styles.statRow}>
+        <MapCanvas pulse={pulse} colorMode={colorMode} activeNo={activeNo} onSelect={onSelect} />
+        <View style={styles.statOverlay} pointerEvents="none">
           <Stat n={String(constituencies.length)} l="Seats" />
           <Stat n={String(districts.length)} l="Districts" />
-          <Stat n="2022" l="Baseline" />
-          <Stat n="ਸਭ ਦੀ ਸੁਣਾਂਗੇ" l="We listen to everyone" wide />
+          <Stat n="71.9%" l="2022 turnout" />
         </View>
-        <View style={{ flex: 1 }}>
-          <MapCanvas pulse={pulse} colorMode={colorMode} activeNo={activeNo} onSelect={onSelect} />
-          <View style={styles.legendOverlay} pointerEvents="none">
-            <Legend mode={colorMode} />
+        {activeNo == null && (
+          <View style={styles.mapHint} pointerEvents="none">
+            <Feather name="mouse-pointer" size={12} color={colors.textDim} />
+            <Txt size={11} dim>
+              Tap a seat to zoom in · tap empty space to zoom out
+            </Txt>
           </View>
+        )}
+        <View style={styles.legendOverlay} pointerEvents="none">
+          <Legend mode={colorMode} />
         </View>
       </View>
 
@@ -139,7 +144,7 @@ function Stat({ n, l, wide }: { n: string; l: string; wide?: boolean }) {
 const styles = StyleSheet.create({
   root: { flex: 1, flexDirection: 'row', backgroundColor: colors.bg },
   left: {
-    width: 320,
+    width: 300,
     borderRightWidth: 1,
     borderRightColor: colors.border,
     backgroundColor: colors.bgElev,
@@ -191,28 +196,35 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     paddingVertical: 11,
   },
-  center: { flex: 1, minWidth: 0 },
-  statRow: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
+  center: { flex: 1, minWidth: 0, position: 'relative' },
+  statOverlay: { position: 'absolute', top: 12, left: 12, flexDirection: 'row', gap: 7 },
   stat: {
-    flex: 1,
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(0,20,52,0.78)',
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 11,
     alignItems: 'center',
+    minWidth: 64,
+  },
+  mapHint: {
+    position: 'absolute',
+    top: 14,
+    right: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    backgroundColor: 'rgba(0,20,52,0.78)',
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
   },
   legendOverlay: { position: 'absolute', left: 16, bottom: 18 },
   right: {
-    width: 372,
+    width: 352,
     borderLeftWidth: 1,
     borderLeftColor: colors.border,
     backgroundColor: colors.bgElev,

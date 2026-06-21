@@ -16,6 +16,7 @@
 import Constants from 'expo-constants';
 import { constituencies, results, framework, byNo } from '../data';
 import { buildPulse, type Pulse } from './pulse';
+import { grievancesFor } from './grievances';
 
 const USE_LOCAL = true;
 
@@ -73,6 +74,12 @@ export const api = {
   async getConstituency(no: number) {
     if (USE_LOCAL) return { ...byNo[no], pulse: localPulse()[no] };
     return request<any>(`/constituencies/${no}`);
+  },
+
+  /** Top citizen grievances for a constituency (most-voted first). */
+  async getGrievances(no: number) {
+    if (USE_LOCAL) return grievancesFor(no, byNo[no]?.district || '');
+    return request<any>(`/constituencies/${no}/grievances`);
   },
 
   /** Submit a grievance from the voter-journey flow. */
