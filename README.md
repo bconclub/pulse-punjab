@@ -1,52 +1,75 @@
-# Punjab Constituency Map
+# Pulse of Punjab — native app
 
-Interactive map of Punjab's **117 Vidhan Sabha (assembly) constituencies**. Click a marker
-or list row to open a detail panel, add info (MLA, party, contact, PIN codes, notes), and
-save it. Search by name, district, or PIN code.
+Android-installable **Expo React Native** app for the *Punjab Yatra 2026 · ਪੰਜਾਬੀਅਤ ਦੀ ਲਹਿਰ*
+campaign. Interactive choropleth of all **117 Vidhan Sabha constituencies** with a
+premium dark "election-night" UI, voter age analytics, the P1/P2/P3 mobilization
+framework, a scan→call voter journey, and push notifications.
 
-## Run
+> Migrated from the original static `index.html` build to a fully native app
+> (mobile-first, installable, push-capable, backend-ready).
 
-**Easiest: just double-click `index.html`.** Data is bundled into `data.js`, so it
-works straight from `file://` — no server needed (you only need internet for the map tiles).
+## Stack
 
-Optional dev server (for live edits / the fetch path):
+- **Expo SDK 56 / React Native 0.85**, TypeScript
+- **react-native-maps** — choropleth of real ECI boundaries (dark map style)
+- **expo-notifications** — permissions, Android channel, push token, local alerts
+- **Inter + Sora** type, custom dark design system (`src/theme.ts`)
+
+## Run it (dev)
+
+```bash
+npm install
+npm start            # Expo dev server (Metro on :8081)
+```
+
+Then open on a device:
+
+- **Phone:** install **Expo Go**, same Wi-Fi, scan the QR or open `exp://<LAN-IP>:8081`
+- **Android emulator:** press `a` in the Expo terminal (`npm run android`)
+
+The app ships all data inline, so it runs offline against the seeded pulse model.
+
+## Build an installable Android app (APK/AAB)
+
+Uses **EAS Build** (needs a free Expo account — login is interactive):
+
+```bash
+npm i -g eas-cli
+eas login
+eas build:configure
+eas build -p android --profile preview     # APK you can sideload
+eas build -p android --profile production   # AAB for Play Store
+```
+
+App id: `in.punjabyatra.pulse`. Push notifications: run once on a real device to
+mint an Expo push token; set the EAS `projectId` in `app.json → extra.eas.projectId`
+for remote push.
+
+## Project structure
 
 ```
-python -m http.server 8000   # then open http://localhost:8000
+App.tsx                 # root: fonts, tab nav, brand header, detail sheet
+src/theme.ts            # design tokens (dark, saffron/azure)
+src/data/               # bundled datasets (117 ACs, 2022 results, geojson)
+src/lib/
+  api.ts                # the seam to backends — flip USE_LOCAL for live services
+  pulse.ts              # seeded per-seat metrics + age model
+  geo.ts                # geojson -> polygons + choropleth fill logic
+  notifications.ts      # expo-notifications register + local send
+src/components/         # MapCanvas, ColorModeBar, Legend, SeatList, DetailSheet, ...
+src/screens/            # ProgramScreen, JourneyScreen
 ```
 
-If you edit anything in `data/`, regenerate the inline bundle:
+## Backends / APIs
 
-```
-node scripts/bundle.cjs
-```
+`src/lib/api.ts` is the single integration point. Today it serves bundled data;
+set `EXPO_PUBLIC_API_URL` (or `app.json -> extra.apiBaseUrl`) and flip `USE_LOCAL`
+to route every screen to live services:
 
-## Files
-
-- `index.html` — layout (sidebar list, map, detail panel)
-- `app.js` — Leaflet map, markers, search/filter, localStorage persistence
-- `styles.css` — dark theme
-- `data/constituencies.json` — all 117 ACs: `no, name, district, reserved (SC/null), lha (Lok Sabha)`
-- `data/pincodes.json` — starter PIN → constituency lookup (expand this)
-
-## How data works
-
-- **Real boundaries** — `data/punjab-ac.geojson` is a rounded build of the ECI-derived
-  AC shapefile (117 polygons, keyed by AC number). Source: HindustanTimesLabs/shapefiles.
-  Rebuild it from `data/punjab_AC.raw.json` with `node scripts/geo.cjs`.
-- **Color modes** (top-left legend updates per mode):
-  - *Engagement heat* — blue ramp from our pulse metrics (mock until Proxy backend)
-  - *2022 result* — fills by winning party; **per-seat winners not loaded yet**
-    (`data/results-2022.json` → `winners` is empty on purpose; seat/vote aggregates are real)
-  - *Priority* — P1/P2/P3 focus · *Seat type* — General / SC
-- **Donut** (bottom-left): outer = vote %, inner = seat % (real 2022 aggregates).
-- **Urban insets**: buttons zoom to the Amritsar / Jalandhar / Ludhiana seat clusters.
-- **Saved details** live in browser `localStorage` (key `punjab-ac-details`). No backend yet.
-- **PIN search**: typing a 6-digit PIN flies to its mapped constituency.
-
-## Next steps (pick up from here)
-
-- [ ] Real AC boundary GeoJSON (color regions, click polygon instead of pin)
-- [ ] Full PIN-code dataset for all 117 seats
-- [ ] Backend / export so edits sync beyond one browser
-- [ ] Toggle layer for 13 Lok Sabha constituencies (data already tagged via `lha`)
+| Endpoint            | Used by                          |
+|---------------------|----------------------------------|
+| `GET /constituencies`, `/results`, `/framework` | map, list, program |
+| `GET /pulse`, `/pulse/:no`                       | metrics, choropleth |
+| `POST /grievances`                              | voter journey       |
+| `POST /subscribe`                               | WhatsApp / updates opt-in |
+| `POST /devices`                                 | push token registration |
