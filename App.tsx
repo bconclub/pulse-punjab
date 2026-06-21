@@ -1,7 +1,8 @@
-/** Pulse of Punjab — native app root.
- *  Brand header + tab nav (Map / Seats / Program / Journey) + detail sheet. */
+/** Pulse of Punjab — app root.
+ *  Desktop (>=960px): 3-pane dashboard (DesktopLayout).
+ *  Mobile: brand header + tab nav (Map / Seats / Program / Journey) + detail sheet. */
 import React, { useEffect, useState } from 'react';
-import { View, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Pressable, StyleSheet, ActivityIndicator, Modal, useWindowDimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -20,6 +21,7 @@ import ColorModeBar from './src/components/ColorModeBar';
 import Legend from './src/components/Legend';
 import SeatList from './src/components/SeatList';
 import DetailSheet from './src/components/DetailSheet';
+import DesktopLayout from './src/components/DesktopLayout';
 import ProgramScreen from './src/screens/ProgramScreen';
 import JourneyScreen from './src/screens/JourneyScreen';
 
@@ -38,6 +40,8 @@ const TABS: { id: Tab; label: string; icon: any }[] = [
   { id: 'journey', label: 'Journey', icon: 'smartphone' },
 ];
 
+const bell = () => sendLocal('Pulse of Punjab', 'Notifications are live on this device. ✓');
+
 export default function App() {
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
@@ -47,25 +51,55 @@ export default function App() {
     Sora_700Bold,
   });
 
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 960;
+
   const [tab, setTab] = useState<Tab>('map');
   const [colorMode, setColorMode] = useState<ColorMode>('engagement');
   const [pulse, setPulse] = useState<Record<number, Pulse>>({});
   const [activeNo, setActiveNo] = useState<number | null>(null);
+  const [overlay, setOverlay] = useState<null | 'program' | 'journey'>(null);
 
   useEffect(() => {
     api.getPulseAll().then(setPulse);
     registerForPush().catch(() => {});
   }, []);
 
-  function select(no: number) {
-    setActiveNo(no);
-  }
+  // no < 0 is the "clear selection" signal from the desktop right panel.
+  const select = (no: number) => setActiveNo(no < 0 ? null : no);
 
   if (!fontsLoaded) {
     return (
       <View style={styles.boot}>
         <ActivityIndicator color={colors.accent} />
       </View>
+    );
+  }
+
+  if (isDesktop) {
+    return (
+      <SafeAreaProvider>
+        <StatusBar style="light" />
+        <SafeAreaView style={styles.app} edges={['top']}>
+          <DesktopLayout
+            pulse={pulse}
+            colorMode={colorMode}
+            setColorMode={setColorMode}
+            activeNo={activeNo}
+            onSelect={select}
+            onOpenProgram={() => setOverlay('program')}
+            onOpenJourney={() => setOverlay('journey')}
+            onBell={bell}
+          />
+        </SafeAreaView>
+        <OverlayModal visible={overlay != null} onClose={() => setOverlay(null)}>
+          {overlay === 'program' ? (
+            <ProgramScreen />
+          ) : overlay === 'journey' ? (
+            <JourneyScreen activeNo={activeNo} />
+          ) : null}
+        </OverlayModal>
+      </SafeAreaProvider>
     );
   }
 
@@ -88,11 +122,7 @@ export default function App() {
               </Txt>
             </View>
           </View>
-          <Pressable
-            hitSlop={10}
-            style={styles.bell}
-            onPress={() => sendLocal('Pulse of Punjab', 'Notifications are live on this device. ✓')}
-          >
+          <Pressable hitSlop={10} style={styles.bell} onPress={bell}>
             <Feather name="bell" size={18} color={colors.textDim} />
           </Pressable>
         </View>
@@ -120,7 +150,7 @@ export default function App() {
               </View>
             </View>
           )}
-          {tab === 'seats' && <SeatList onSelect={select} />}
+          {tab === 'seats' && <SeatList onSelect={select} activeNo={activeNo} />}
           {tab === 'program' && <ProgramScreen />}
           {tab === 'journey' && <JourneyScreen activeNo={activeNo} />}
         </View>
@@ -146,8 +176,33 @@ export default function App() {
         </View>
       </SafeAreaView>
 
+      {/* Detail (mobile only — desktop shows it in the right panel) */}
       <DetailSheet no={activeNo} pulse={pulse} onClose={() => setActiveNo(null)} />
     </SafeAreaProvider>
+  );
+}
+
+function OverlayModal({
+  visible,
+  onClose,
+  children,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={styles.overlayBackdrop}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        <View style={styles.overlayCard}>
+          <Pressable style={styles.overlayClose} onPress={onClose} hitSlop={10}>
+            <Feather name="x" size={20} color={colors.textDim} />
+          </Pressable>
+          {children}
+        </View>
+      </View>
+    </Modal>
   );
 }
 
@@ -197,12 +252,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  statRow: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
+  statRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingVertical: 10 },
   stat: {
     flex: 1,
     backgroundColor: colors.surface,
@@ -223,4 +273,17 @@ const styles = StyleSheet.create({
     paddingBottom: 6,
   },
   tabItem: { flex: 1, alignItems: 'center' },
+  overlayBackdrop: { flex: 1, backgroundColor: 'rgba(4,7,12,0.7)', alignItems: 'center', justifyContent: 'center', padding: 24 },
+  overlayCard: {
+    width: '100%',
+    maxWidth: 760,
+    maxHeight: '88%',
+    backgroundColor: colors.bg,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+    paddingTop: 8,
+  },
+  overlayClose: { position: 'absolute', top: 14, right: 14, zIndex: 5, padding: 4 },
 });

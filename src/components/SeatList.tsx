@@ -6,7 +6,13 @@ import { constituencies, districts } from '../data';
 import { winnerOf } from '../lib/geo';
 import { party as PARTY, colors, radius } from '../theme';
 
-export default function SeatList({ onSelect }: { onSelect: (no: number) => void }) {
+export default function SeatList({
+  onSelect,
+  activeNo,
+}: {
+  onSelect: (no: number) => void;
+  activeNo?: number | null;
+}) {
   const [q, setQ] = useState('');
   const [dist, setDist] = useState('');
 
@@ -60,8 +66,9 @@ export default function SeatList({ onSelect }: { onSelect: (no: number) => void 
         contentContainerStyle={{ paddingBottom: 120 }}
         renderItem={({ item: c }) => {
           const w = winnerOf(c.no);
+          const active = c.no === activeNo;
           return (
-            <Pressable style={styles.row} onPress={() => onSelect(c.no)}>
+            <Pressable style={[styles.row, active && styles.rowActive]} onPress={() => onSelect(c.no)}>
               <View style={[styles.partyDot, { backgroundColor: w ? PARTY[w.party] : colors.faint }]} />
               <View style={styles.numWrap}>
                 <Txt size={11} weight="semibold" color={colors.textDim}>
@@ -138,6 +145,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
+  rowActive: { backgroundColor: colors.surface, borderLeftWidth: 3, borderLeftColor: colors.accent, paddingLeft: 13 },
   partyDot: { width: 9, height: 9, borderRadius: 5 },
   numWrap: {
     width: 30,
