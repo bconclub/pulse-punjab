@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pulse of Punjab — Constituency Visualizer</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <aside id="sidebar">
+      <header>
+        <h1>Pulse of Punjab</h1>
+        <p class="sub">117 seats · constituency-wise listening &amp; mobilization</p>
+        <button id="open-program" class="ghost wide">📊 Program overview (P1 · P2 · P3)</button>
+        <button id="open-journey" class="ghost wide">📱 Voter journey demo (scan → call)</button>
+      </header>
+
+      <div class="controls">
+        <input id="search" type="search" placeholder="Search name / district / PIN code…" autocomplete="off" />
+        <select id="district-filter"><option value="">All districts</option></select>
+        <select id="color-mode">
+          <option value="reserved">Color: General / SC</option>
+          <option value="priority">Color: priority focus (P1/P2/P3)</option>
+          <option value="pulse">Color: engagement heat</option>
+        </select>
+      </div>
+
+      <div id="count" class="count"></div>
+      <ul id="list" class="list"></ul>
+    </aside>
+
+    <main id="map-wrap">
+      <div id="map"></div>
+    </main>
+
+    <section id="detail" class="detail hidden">
+      <button id="detail-close" class="close" aria-label="Close">×</button>
+      <h2 id="d-name"></h2>
+      <div id="d-meta" class="meta"></div>
+
+      <div id="pulse" class="pulse-block"></div>
+
+      <details class="acc" open>
+        <summary>Scan-card features</summary>
+        <div id="scan-features" class="chips"></div>
+      </details>
+
+      <details class="acc">
+        <summary>Grievance pipeline</summary>
+        <div id="grievance-flow" class="flow"></div>
+      </details>
+
+      <form id="detail-form">
+        <label>MLA / Representative
+          <input name="mla" type="text" placeholder="Name" />
+        </label>
+        <label>Party
+          <input name="party" type="text" placeholder="Party" />
+        </label>
+        <label>Office address
+          <textarea name="office" rows="2" placeholder="Address"></textarea>
+        </label>
+        <label>Contact
+          <input name="contact" type="text" placeholder="Phone / email" />
+        </label>
+        <label>PIN codes (comma separated)
+          <input name="pins" type="text" placeholder="143001, 143006" />
+        </label>
+        <label>Notes
+          <textarea name="notes" rows="3" placeholder="Anything else…"></textarea>
+        </label>
+        <div class="actions">
+          <button type="submit" class="primary">Save</button>
+          <button type="button" id="detail-reset" class="ghost">Clear</button>
+        </div>
+        <p class="saved" id="saved-msg"></p>
+      </form>
+    </section>
+    <div id="program" class="program hidden">
+      <div class="program-inner">
+        <button id="program-close" class="close" aria-label="Close">×</button>
+        <h2 id="prog-title"></h2>
+        <p id="prog-tag" class="sub"></p>
+
+        <h3>Priorities</h3>
+        <div id="prog-priorities" class="prio-grid"></div>
+
+        <h3>7-month timeline</h3>
+        <div id="prog-timeline" class="timeline"></div>
+
+        <h3>Scan-card → action</h3>
+        <div id="prog-scan" class="chips"></div>
+
+        <h3>Knowledge base (feeds voter conversion)</h3>
+        <div id="prog-kb" class="kb-grid"></div>
+
+        <h3>WhatsApp funnel — lead magnet &amp; traffic</h3>
+        <div id="prog-wa" class="flow"></div>
+      </div>
+    </div>
+
+    <div id="journey" class="program hidden">
+      <div class="phone">
+        <button id="journey-close" class="close" aria-label="Close">×</button>
+        <div class="phone-notch"></div>
+        <div id="phone-screen" class="phone-screen"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
