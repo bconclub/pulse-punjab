@@ -21,9 +21,10 @@
         <input id="search" type="search" placeholder="Search name / district / PIN code…" autocomplete="off" />
         <select id="district-filter"><option value="">All districts</option></select>
         <select id="color-mode">
-          <option value="reserved">Color: General / SC</option>
+          <option value="engagement">Color: engagement heat</option>
+          <option value="result2022">Color: 2022 result (party)</option>
           <option value="priority">Color: priority focus (P1/P2/P3)</option>
-          <option value="pulse">Color: engagement heat</option>
+          <option value="reserved">Color: General / SC</option>
         </select>
       </div>
 
@@ -33,6 +34,14 @@
 
     <main id="map-wrap">
       <div id="map"></div>
+      <div id="legend" class="overlay legend"></div>
+      <div id="insets" class="overlay insets">
+        <span class="ins-label">Urban insets</span>
+        <button data-cluster="Amritsar">Amritsar</button>
+        <button data-cluster="Jalandhar">Jalandhar</button>
+        <button data-cluster="Ludhiana">Ludhiana</button>
+      </div>
+      <div id="donut" class="overlay donut"></div>
     </main>
 
     <section id="detail" class="detail hidden">

@@ -1,7 +1,7 @@
-/* Punjab Constituency Map — scaffold
- * Markers placed at district centroid + deterministic jitter so co-district seats
- * fan out instead of stacking. Swap in real AC centroids / GeoJSON boundaries later.
- * User-entered details persist in localStorage (key: punjab-ac-details).
+/* Pulse of Punjab — constituency visualizer
+ * Choropleth of all 117 Vidhan Sabha seats using real ECI-derived boundaries
+ * (data/punjab-ac.geojson). Fill driven by color mode (engagement / 2022 result /
+ * priority / seat-type). User-entered details persist in localStorage.
  */
 
 // Inline SVG icon set (stroke-based, consistent 2px stroke). No emoji as UI icons.
@@ -29,58 +29,22 @@ function icon(name, cls) {
 }
 const FEATURE_ICON = { volunteer: "volunteer", stay_updated: "bell", share_voice: "megaphone", join_events: "calendar", location: "pin" };
 
-// District centroids [lat, lng]. Replace with per-AC coords when available.
-const DISTRICT_COORDS = {
-  "Pathankot":        [32.27, 75.65],
-  "Gurdaspur":        [32.04, 75.40],
-  "Amritsar":         [31.63, 74.87],
-  "Tarn Taran":       [31.45, 74.93],
-  "Kapurthala":       [31.38, 75.38],
-  "Jalandhar":        [31.33, 75.58],
-  "Hoshiarpur":       [31.53, 75.91],
-  "SBS Nagar":        [31.12, 76.12],
-  "Rupnagar":         [30.97, 76.53],
-  "SAS Nagar":        [30.70, 76.72],
-  "Fatehgarh Sahib":  [30.65, 76.39],
-  "Ludhiana":         [30.90, 75.85],
-  "Moga":             [30.82, 75.17],
-  "Firozpur":         [30.92, 74.61],
-  "Fazilka":          [30.40, 74.03],
-  "Sri Muktsar Sahib":[30.47, 74.52],
-  "Faridkot":         [30.67, 74.75],
-  "Bathinda":         [30.21, 74.95],
-  "Mansa":            [29.99, 75.39],
-  "Sangrur":          [30.25, 75.84],
-  "Barnala":          [30.37, 75.55],
-  "Malerkotla":       [30.53, 75.88],
-  "Patiala":          [30.34, 76.39]
-};
-
 const STORE_KEY = "punjab-ac-details";
 const loadStore = () => { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch { return {}; } };
 const saveStore = (s) => localStorage.setItem(STORE_KEY, JSON.stringify(s));
 
-// Deterministic offset from AC number so markers in same district spread out.
-function jitter(no) {
-  const a = (no * 137.508) * Math.PI / 180; // golden-angle spiral
-  const r = 0.05 + (no % 7) * 0.012;
-  return [Math.sin(a) * r, Math.cos(a) * r];
-}
-
-function coordsFor(c) {
-  const base = DISTRICT_COORDS[c.district] || [31.0, 75.5];
-  const [dy, dx] = jitter(c.no);
-  return [base[0] + dy, base[1] + dx];
-}
-
 let constituencies = [];
 let pincodes = {};
 let framework = null;
-let pulse = {};     // no -> mock pulse metrics (replace with Proxy backend)
-let markers = {};   // no -> Leaflet marker
+let results = null;       // 2022 result aggregate + winners
+let geo = null;           // boundary FeatureCollection
+let pulse = {};           // no -> mock pulse metrics (replace with Proxy backend)
+let layers = {};          // no -> Leaflet polygon layer
+let geoLayer = null;
 let store = loadStore();
 let activeNo = null;
-let colorMode = "reserved";
+let colorMode = "engagement";
+const byNo = {};          // no -> constituency record
 
 // Deterministic pseudo-random from a seed (stable mock until backend lands).
 function seeded(n, salt) {
@@ -102,39 +66,45 @@ function buildPulse(c) {
   return { interactions: base, comments, volunteers, grievances, resolved, conversion, engagement, phase };
 }
 
-const map = L.map("map", { zoomControl: true }).setView([30.9, 75.5], 8);
-L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-  attribution: "© OpenStreetMap © CARTO",
-  subdomains: "abcd", maxZoom: 19
-}).addTo(map);
+const map = L.map("map", { zoomControl: false, attributionControl: false, minZoom: 7 })
+  .setView([30.9, 75.4], 8);
+L.control.zoom({ position: "bottomright" }).addTo(map);
 
 const el = (id) => document.getElementById(id);
 
 const PHASE_COLOR = { P1: "#1f6feb", P2: "#ff7a18", P3: "#3fb950" };
+const RESERVED_COLOR = { SC: "#16294f", GEN: "#1f87c7" };
 
-function heatColor(v) { // 0..100 -> blue->orange->red
-  if (v >= 66) return "#ff4d4d";
-  if (v >= 33) return "#ff7a18";
-  return "#1f6feb";
+// Engagement heat — blue ramp (light -> deep), matching the reference choropleth.
+function heatColor(v) {
+  const stops = ["#eaf4fb", "#bfe0f3", "#8accea", "#4fb0db", "#2790c9", "#1f87c7", "#13578a", "#0b3a5e"];
+  const i = Math.min(stops.length - 1, Math.floor((v / 100) * stops.length));
+  return stops[i];
 }
 
-function markerColor(c) {
-  if (colorMode === "priority") return PHASE_COLOR[pulse[c.no]?.phase] || "#888";
-  if (colorMode === "pulse") return heatColor(pulse[c.no]?.engagement || 0);
-  return c.reserved === "SC" ? "#d4a017" : "#ff7a18";
+function partyColor(no) {
+  const w = results?.winners?.[no];
+  if (!w) return "#dfe5ec"; // no per-seat winner data yet (neutral grey)
+  return (results.parties.find(p => p.id === w) || {}).color || "#dfe5ec";
 }
 
-function makeIcon(c) {
-  const filled = store[c.no] && Object.values(store[c.no]).some(v => v && String(v).trim());
-  return L.divIcon({
-    className: "ac-pin",
-    html: `<span style="
-      display:block;width:14px;height:14px;border-radius:50% 50% 50% 0;
-      transform:rotate(-45deg);background:${markerColor(c)};
-      border:2px solid ${filled ? "#fff" : "rgba(255,255,255,.35)"};
-      box-shadow:0 0 0 2px rgba(0,0,0,.4);"></span>`,
-    iconSize: [14, 14], iconAnchor: [7, 14], popupAnchor: [0, -14]
-  });
+function fillFor(c) {
+  if (colorMode === "result2022") return partyColor(c.no);
+  if (colorMode === "priority")   return PHASE_COLOR[pulse[c.no]?.phase] || "#ccc";
+  if (colorMode === "reserved")   return c.reserved === "SC" ? RESERVED_COLOR.SC : RESERVED_COLOR.GEN;
+  return heatColor(pulse[c.no]?.engagement || 0); // engagement (default)
+}
+
+function featureStyle(no) {
+  const c = byNo[no];
+  const saved = store[no] && Object.values(store[no]).some(v => v && String(v).trim());
+  return {
+    fillColor: fillFor(c),
+    color: no === activeNo ? "#111" : "#ffffff",
+    weight: no === activeNo ? 2.5 : (saved ? 1.4 : 0.7),
+    fillOpacity: 0.92,
+    dashArray: saved && no !== activeNo ? "3 2" : null
+  };
 }
 
 function popupHtml(c) {
@@ -143,20 +113,43 @@ function popupHtml(c) {
   if (d.mla) lines.push(`MLA: ${d.mla}${d.party ? " (" + d.party + ")" : ""}`);
   if (d.contact) lines.push(`☎ ${d.contact}`);
   if (d.pins) lines.push(`PIN: ${d.pins}`);
+  const p = pulse[c.no];
   return `<b>${c.no}. ${c.name}</b>${c.reserved ? " · " + c.reserved : ""}<br>
     <small>${c.district} district · ${c.lha} (LS)</small>
+    ${p ? `<br><small>Engagement ${p.engagement} · ${p.interactions} interactions</small>` : ""}
     ${lines.length ? "<br>" + lines.join("<br>") : ""}`;
 }
 
-function renderMarkers() {
-  Object.values(markers).forEach(m => map.removeLayer(m));
-  markers = {};
-  constituencies.forEach(c => {
-    const m = L.marker(coordsFor(c), { icon: makeIcon(c) }).addTo(map);
-    m.bindPopup(popupHtml(c));
-    m.on("click", () => openDetail(c.no));
-    markers[c.no] = m;
-  });
+function refreshFeature(no) {
+  const lyr = layers[no];
+  if (!lyr) return;
+  lyr.setStyle(featureStyle(no));
+  lyr.setPopupContent(popupHtml(byNo[no]));
+}
+
+function renderGeo() {
+  if (geoLayer) { map.removeLayer(geoLayer); layers = {}; }
+  geoLayer = L.geoJSON(geo, {
+    style: (f) => featureStyle(f.properties.no),
+    onEachFeature: (f, lyr) => {
+      const no = f.properties.no;
+      const c = byNo[no];
+      layers[no] = lyr;
+      lyr.bindPopup(popupHtml(c));
+      lyr.bindTooltip(String(no), { permanent: true, direction: "center", className: "ac-num", opacity: 1 });
+      lyr.on({
+        click: () => openDetail(no),
+        mouseover: () => { if (no !== activeNo) lyr.setStyle({ weight: 1.8, color: "#333" }); },
+        mouseout:  () => { if (no !== activeNo) lyr.setStyle(featureStyle(no)); }
+      });
+    }
+  }).addTo(map);
+  map.fitBounds(geoLayer.getBounds(), { padding: [12, 12] });
+}
+
+function focusAC(no) {
+  const lyr = layers[no];
+  if (lyr) map.flyToBounds(lyr.getBounds(), { maxZoom: 11, padding: [40, 40] });
 }
 
 function renderList(items) {
@@ -173,7 +166,7 @@ function renderList(items) {
     if (c.no === activeNo) li.classList.add("active");
     li.innerHTML = `<span class="nm">${c.name} ${c.reserved ? '<span class="tag-sc">SC</span>' : ""}</span>
                     <span class="no">#${c.no} · ${c.district}</span>`;
-    li.addEventListener("click", () => { openDetail(c.no); map.flyTo(coordsFor(c), 11); });
+    li.addEventListener("click", () => { openDetail(c.no); focusAC(c.no); });
     list.appendChild(li);
   });
   el("count").textContent = `${items.length} of ${constituencies.length} shown`;
@@ -186,7 +179,7 @@ function applyFilter() {
   // PIN lookup: if query is a known pincode, jump to its constituency.
   if (/^\d{6}$/.test(q) && pincodes[q]) {
     const target = constituencies.find(c => c.no === pincodes[q].no);
-    if (target) { openDetail(target.no); map.flyTo(coordsFor(target), 11); }
+    if (target) { openDetail(target.no); focusAC(target.no); }
   }
 
   const items = constituencies.filter(c => {
@@ -203,9 +196,12 @@ function applyFilter() {
 }
 
 function openDetail(no) {
-  const c = constituencies.find(x => x.no === no);
+  const c = byNo[no] || constituencies.find(x => x.no === no);
   if (!c) return;
+  const prev = activeNo;
   activeNo = no;
+  if (prev && prev !== no) refreshFeature(prev);
+  refreshFeature(no);
   el("d-name").textContent = `${c.no}. ${c.name}`;
   el("d-meta").textContent = `${c.district} district · ${c.lha} (Lok Sabha)${c.reserved ? " · " + c.reserved + " reserved" : ""}`;
 
@@ -224,7 +220,7 @@ function openDetail(no) {
   el("saved-msg").textContent = "";
 
   el("detail").classList.remove("hidden");
-  markers[no]?.openPopup();
+  layers[no]?.openPopup();
   document.querySelectorAll("#list li").forEach(li =>
     li.classList.toggle("active", Number(li.dataset.no) === no));
 }
@@ -442,7 +438,11 @@ document.addEventListener("keydown", (e) => {
 ["program", "journey"].forEach(id =>
   el(id).addEventListener("click", (e) => { if (e.target.id === id) el(id).classList.add("hidden"); }));
 
-el("color-mode").addEventListener("change", (e) => { colorMode = e.target.value; renderMarkers(); });
+el("color-mode").addEventListener("change", (e) => {
+  colorMode = e.target.value;
+  constituencies.forEach(c => layers[c.no] && layers[c.no].setStyle(featureStyle(c.no)));
+  renderLegend();
+});
 
 el("detail-close").addEventListener("click", () => el("detail").classList.add("hidden"));
 
@@ -454,9 +454,7 @@ el("detail-form").addEventListener("submit", (e) => {
     contact: f.contact.value, pins: f.pins.value, notes: f.notes.value
   };
   saveStore(store);
-  const c = constituencies.find(x => x.no === activeNo);
-  markers[activeNo].setIcon(makeIcon(c));
-  markers[activeNo].setPopupContent(popupHtml(c));
+  refreshFeature(activeNo);
   el("saved-msg").textContent = "Saved ✓";
   setTimeout(() => el("saved-msg").textContent = "", 1800);
 });
@@ -465,34 +463,99 @@ el("detail-reset").addEventListener("click", () => {
   if (!confirm("Clear saved details for this constituency?")) return;
   delete store[activeNo];
   saveStore(store);
-  const c = constituencies.find(x => x.no === activeNo);
-  markers[activeNo].setIcon(makeIcon(c));
-  markers[activeNo].setPopupContent(popupHtml(c));
+  refreshFeature(activeNo);
   openDetail(activeNo);
 });
 
 el("search").addEventListener("input", applyFilter);
 el("district-filter").addEventListener("change", applyFilter);
 
+document.querySelectorAll("#insets button").forEach(b =>
+  b.addEventListener("click", () => zoomCluster(b.dataset.cluster)));
+
+/* ---------- Legend, donut, insets ---------- */
+function renderLegend() {
+  const box = el("legend"); if (!box) return;
+  let title = "", rows = "";
+  if (colorMode === "result2022") {
+    title = "2022 result · seats";
+    rows = results.parties.map(p =>
+      `<div class="lg-row"><span class="sw" style="background:${p.color}"></span><b>${p.seats}</b><span>${p.name}</span></div>`).join("");
+    rows += `<div class="lg-note">Per-seat fill needs verified winners — currently neutral.</div>`;
+  } else if (colorMode === "priority") {
+    title = "Priority focus";
+    rows = [["P1", "Frontline"], ["P2", "Mobilization"], ["P3", "Conversion"]]
+      .map(([k, n]) => `<div class="lg-row"><span class="sw" style="background:${PHASE_COLOR[k]}"></span><span>${k} · ${n}</span></div>`).join("");
+  } else if (colorMode === "reserved") {
+    title = "Seat type";
+    rows = `<div class="lg-row"><span class="sw" style="background:${RESERVED_COLOR.GEN}"></span><span>General</span></div>
+            <div class="lg-row"><span class="sw" style="background:${RESERVED_COLOR.SC}"></span><span>SC reserved</span></div>`;
+  } else {
+    title = "Engagement";
+    const scale = [0, 25, 50, 75, 100].map(v => `<span class="gstop" style="background:${heatColor(v)}"></span>`).join("");
+    rows = `<div class="lg-grad">${scale}</div><div class="lg-ends"><span>low</span><span>high</span></div>`;
+  }
+  box.innerHTML = `<div class="lg-title">${title}</div>${rows}`;
+}
+
+function renderDonut() {
+  const box = el("donut"); if (!box) return;
+  const parts = results.parties;
+  const totSeats = parts.reduce((s, p) => s + p.seats, 0);
+  const totVote = parts.reduce((s, p) => s + p.votePct, 0);
+  const arc = (cx, cy, r, a0, a1) => {
+    const p = (a) => [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+    const [x0, y0] = p(a0), [x1, y1] = p(a1);
+    const large = a1 - a0 > Math.PI ? 1 : 0;
+    return `M${x0.toFixed(2)} ${y0.toFixed(2)} A${r} ${r} 0 ${large} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
+  };
+  let outer = "", inner = "", aV = -Math.PI / 2, aS = -Math.PI / 2;
+  parts.forEach(p => {
+    const dV = (p.votePct / totVote) * Math.PI * 2;
+    const dS = (p.seats / totSeats) * Math.PI * 2;
+    outer += `<path d="${arc(60, 60, 50, aV, aV + dV)}" stroke="${p.color}" stroke-width="14" fill="none"/>`;
+    inner += `<path d="${arc(60, 60, 32, aS, aS + dS)}" stroke="${p.color}" stroke-width="14" fill="none"/>`;
+    aV += dV; aS += dS;
+  });
+  box.innerHTML = `<svg viewBox="0 0 120 120" width="118" height="118" role="img" aria-label="2022 vote and seat share">
+      ${outer}${inner}
+      <text x="60" y="57" text-anchor="middle" class="d-lbl">Outer: Vote %</text>
+      <text x="60" y="69" text-anchor="middle" class="d-lbl">Inner: Seat %</text>
+    </svg><div class="d-cap">2022 result</div>`;
+}
+
+const CLUSTERS = {
+  Amritsar:  [15, 16, 17, 18, 19],
+  Jalandhar: [34, 35, 36],
+  Ludhiana:  [60, 61, 62, 63, 64, 65]
+};
+function zoomCluster(name) {
+  const nos = CLUSTERS[name] || [];
+  const bounds = nos.map(n => layers[n]).filter(Boolean).reduce((b, l) => b ? b.extend(l.getBounds()) : l.getBounds(), null);
+  if (bounds) map.flyToBounds(bounds, { padding: [40, 40], maxZoom: 13 });
+}
+
 async function loadData() {
   // Prefer inline bundle (data.js) so the app runs on file:// with no server.
   if (window.PUNJAB) {
     const d = window.PUNJAB;
-    return [d.constituencies, { ...d.pincodes }, d.framework];
+    return [d.constituencies, { ...d.pincodes }, d.framework, d.results, d.geo];
   }
   // Fallback to fetch when served over http and bundle absent.
   return Promise.all([
     fetch("data/constituencies.json").then(r => r.json()),
     fetch("data/pincodes.json").then(r => r.json()),
-    fetch("data/framework.json").then(r => r.json())
+    fetch("data/framework.json").then(r => r.json()),
+    fetch("data/results-2022.json").then(r => r.json()),
+    fetch("data/punjab-ac.geojson").then(r => r.json())
   ]);
 }
 
 async function init() {
-  [constituencies, pincodes, framework] = await loadData();
+  [constituencies, pincodes, framework, results, geo] = await loadData();
   delete pincodes._comment;
 
-  constituencies.forEach(c => { pulse[c.no] = buildPulse(c); });
+  constituencies.forEach(c => { byNo[c.no] = c; pulse[c.no] = buildPulse(c); });
 
   const dists = [...new Set(constituencies.map(c => c.district))].sort();
   const sel = el("district-filter");
@@ -501,7 +564,9 @@ async function init() {
     o.value = o.textContent = d; sel.appendChild(o);
   });
 
-  renderMarkers();
+  renderGeo();
+  renderLegend();
+  renderDonut();
   renderList(constituencies);
 }
 

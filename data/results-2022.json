@@ -1,0 +1,14 @@
+{
+  "_comment": "2022 Punjab Vidhan Sabha result. Seat counts are the authoritative ECI breakdown (sum=117). Vote% are documented aggregates (minor-party % approximate). 'winners' (AC no -> party) is intentionally empty until a verified per-seat dataset is loaded — do not fabricate.",
+  "election": "2022 Punjab Legislative Assembly election",
+  "totalSeats": 117,
+  "parties": [
+    { "id": "AAP", "name": "AAP", "seats": 92, "votePct": 42.0, "color": "#1f87c7" },
+    { "id": "INC", "name": "INC", "seats": 18, "votePct": 23.0, "color": "#74c7ed" },
+    { "id": "SAD", "name": "SAD", "seats": 3,  "votePct": 18.4, "color": "#16294f" },
+    { "id": "BJP", "name": "BJP", "seats": 2,  "votePct": 6.6,  "color": "#f0a13e" },
+    { "id": "BSP", "name": "BSP", "seats": 1,  "votePct": 1.8,  "color": "#3b3a8e" },
+    { "id": "IND", "name": "IND", "seats": 1,  "votePct": 2.6,  "color": "#9aa0a6" }
+  ],
+  "winners": {}
+}

@@ -31,12 +31,18 @@ node scripts/bundle.cjs
 
 ## How data works
 
-- **Marker positions are approximate** — each AC sits at its district centroid plus a
-  deterministic offset so seats in the same district fan out. Replace with real AC
-  centroids or drop in a boundary **GeoJSON** for accurate shapes (next step).
+- **Real boundaries** — `data/punjab-ac.geojson` is a rounded build of the ECI-derived
+  AC shapefile (117 polygons, keyed by AC number). Source: HindustanTimesLabs/shapefiles.
+  Rebuild it from `data/punjab_AC.raw.json` with `node scripts/geo.cjs`.
+- **Color modes** (top-left legend updates per mode):
+  - *Engagement heat* — blue ramp from our pulse metrics (mock until Proxy backend)
+  - *2022 result* — fills by winning party; **per-seat winners not loaded yet**
+    (`data/results-2022.json` → `winners` is empty on purpose; seat/vote aggregates are real)
+  - *Priority* — P1/P2/P3 focus · *Seat type* — General / SC
+- **Donut** (bottom-left): outer = vote %, inner = seat % (real 2022 aggregates).
+- **Urban insets**: buttons zoom to the Amritsar / Jalandhar / Ludhiana seat clusters.
 - **Saved details** live in browser `localStorage` (key `punjab-ac-details`). No backend yet.
-- **PIN search**: typing a 6-digit PIN flies to its mapped constituency. Add entries to
-  `data/pincodes.json`, or store comma-separated PINs per seat in the detail panel.
+- **PIN search**: typing a 6-digit PIN flies to its mapped constituency.
 
 ## Next steps (pick up from here)
 

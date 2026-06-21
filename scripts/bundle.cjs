@@ -11,7 +11,9 @@ const out =
   "window.PUNJAB = {\n" +
   "  constituencies: " + read("data/constituencies.json") + ",\n" +
   "  pincodes: " + read("data/pincodes.json") + ",\n" +
-  "  framework: " + read("data/framework.json") + "\n" +
+  "  framework: " + read("data/framework.json") + ",\n" +
+  "  results: " + read("data/results-2022.json") + ",\n" +
+  "  geo: " + read("data/punjab-ac.geojson") + "\n" +
   "};\n";
 
 fs.writeFileSync(path.join(root, "data.js"), out);
