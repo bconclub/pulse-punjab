@@ -4,28 +4,31 @@
  * Tokens are consumed across every component so the look stays consistent.
  */
 
+// Palette extracted from the official "Punjab Yatra 2026 · ਪੰਜਾਬੀਅਤ ਦੀ ਲਹਿਰ"
+// design deck: deep royal blue #003C90 surfaces, white type, saffron-orange
+// #F06C18 accent (the "lehar"/wave), bright blue #006CD8 highlight.
 export const colors = {
-  bg: '#0A0E15',
-  bgElev: '#0F1521',
-  surface: '#141C2A',
-  surface2: '#1B2536',
-  surface3: '#22304A',
-  border: '#26334A',
-  border2: '#33425E',
+  bg: '#003C90', // Punjab Yatra brand blue — primary surface
+  bgElev: '#002C6E', // deeper blue — rails, tab bar, headers
+  surface: '#0A47A0', // card on blue
+  surface2: '#12539E',
+  surface3: '#1C61BC',
+  border: 'rgba(255,255,255,0.16)',
+  border2: 'rgba(255,255,255,0.30)',
 
-  text: '#EAF0F8',
-  textDim: '#9FB0C7',
-  faint: '#6B7B93',
+  text: '#FFFFFF',
+  textDim: '#CFE0F8',
+  faint: '#93B0DE',
 
-  accent: '#F5A623', // saffron / amber — primary
-  accentDim: 'rgba(245,166,35,0.16)',
-  azure: '#3D9BE0',
-  azureDim: 'rgba(61,155,224,0.16)',
-  green: '#34D399',
-  greenDim: 'rgba(52,211,153,0.16)',
+  accent: '#F06C18', // saffron-orange — primary accent (the "lehar")
+  accentDim: 'rgba(240,108,24,0.20)',
+  azure: '#2E8DE6', // bright blue highlight (#006CD8 family)
+  azureDim: 'rgba(46,141,230,0.20)',
+  green: '#2FD08A',
+  greenDim: 'rgba(47,208,138,0.18)',
   red: '#F2545B',
 
-  mapBg: '#0B1018',
+  mapBg: '#00214B', // deep brand navy — keeps the choropleth legible
   white: '#FFFFFF',
 };
 
@@ -39,28 +42,30 @@ export const party: Record<string, string> = {
   IND: '#9AA7BD',
 };
 
-/** Phase (priority) colors — P1 frontline, P2 mobilization, P3 conversion. */
+/** Phase (priority) colors — P1 frontline, P2 mobilization, P3 conversion.
+ *  P2 tied to the brand saffron-orange. */
 export const phase: Record<string, string> = {
-  P1: '#3D9BE0',
-  P2: '#F5A623',
-  P3: '#34D399',
+  P1: '#2E8DE6',
+  P2: '#F06C18',
+  P3: '#2FD08A',
 };
 
-/** Engagement heat ramp — dim→bright, tuned to read on the dark canvas. */
+/** Engagement heat ramp — low→high; low end lifted so it reads on brand navy. */
 export const HEAT_RAMP = [
-  '#16304A', '#1A466E', '#1E5D92', '#2277BB',
-  '#2A93D6', '#46ABE6', '#7CC6F0', '#B3E0FA',
+  '#2A5A86', '#2F6E9E', '#2F84BC', '#2E9AD2',
+  '#46ABE6', '#79C6F0', '#A7DBF8', '#CFEDFD',
 ];
 
 /** Youth-density ramp — dim→mint, low youth recedes, high youth glows. */
 export const YOUTH_RAMP = [
-  '#12341F', '#16512F', '#1C7043', '#249060',
-  '#3BB07D', '#62CDA0', '#9BE3C4',
+  '#1C5A3A', '#1F7048', '#249060', '#2FAE78',
+  '#52C698', '#7FDAB4', '#A8ECCE',
 ];
 
-/** Age-band segment colors for the detail sheet stacked bar. */
+/** Age-band segment colors for the detail stacked bar — youth bands warm
+ *  (brand orange), older bands cool blue; all tuned to read on blue cards. */
 export const AGE_COLORS = [
-  '#7CC6F0', '#46ABE6', '#2A93D6', '#2277BB', '#1E5D92', '#1A466E', '#7C8AA3',
+  '#FFC79A', '#F7A062', '#BFE6FA', '#8FD0F4', '#5FB6EA', '#3E97D6', '#C2D2EC',
 ];
 
 export const radius = { sm: 8, md: 12, lg: 16, xl: 22, pill: 999 };

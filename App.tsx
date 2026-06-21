@@ -228,8 +228,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomWidth: 2,
+    borderBottomColor: colors.accent,
   },
   brand: { flexDirection: 'row', alignItems: 'center', gap: 11 },
   mark: {

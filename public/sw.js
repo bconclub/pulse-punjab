@@ -1,10 +1,11 @@
-/* Minimal service worker — enables "install to home screen / desktop" and
-   offline-first shell caching for the static web build. */
-const CACHE = 'pulse-pb-v1';
+/* Service worker — enables "install to home screen / desktop" and offline use.
+   Strategy:
+     - HTML / navigations → network-first (so a fresh deploy shows immediately,
+       never a stale shell), falling back to cache when offline.
+     - Hashed static assets → cache-first (immutable, fast, offline). */
+const CACHE = 'pulse-pb-v2';
 
-self.addEventListener('install', (e) => {
-  self.skipWaiting();
-});
+self.addEventListener('install', () => self.skipWaiting());
 
 self.addEventListener('activate', (e) => {
   e.waitUntil(
@@ -13,10 +14,27 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
 });
 
-// Cache-first for same-origin GETs; network fallback keeps it fresh.
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
+
+  const isNav = req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html');
+
+  if (isNav) {
+    // network-first: always try the latest HTML, fall back to cache offline
+    e.respondWith(
+      fetch(req)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(req, copy));
+          return res;
+        })
+        .catch(() => caches.match(req).then((hit) => hit || caches.match('/'))),
+    );
+    return;
+  }
+
+  // cache-first for hashed assets, refresh in the background
   e.respondWith(
     caches.open(CACHE).then(async (cache) => {
       const hit = await cache.match(req);

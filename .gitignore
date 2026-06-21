@@ -17,3 +17,6 @@ ios/
 
 # env
 .env*.local
+
+# pdf render artifacts
+.pdf_pages/
