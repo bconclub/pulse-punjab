@@ -28,8 +28,10 @@ body {
   flex-direction: column;
   min-height: 0;
 }
-#sidebar header { padding: 16px 16px 8px; }
-#sidebar h1 { margin: 0; font-size: 18px; }
+#sidebar header { padding: 0 0 8px; }
+#sidebar header h1, #sidebar header .sub, #sidebar header .ghost { margin-left: 16px; margin-right: 16px; }
+#sidebar header h1 { margin-top: 12px; margin-bottom: 0; font-size: 18px; }
+.yatra-strip { margin: 0; }
 .sub { margin: 4px 0 0; font-size: 12px; color: var(--muted); }
 
 .controls { padding: 8px 16px; display: flex; flex-direction: column; gap: 8px; }
@@ -223,6 +225,26 @@ button.wide:hover { border-color: var(--accent); }
 .confirm-ic.ok .ic { color: #3fb950; background: rgba(63,185,80,.12); }
 .scr-hd .ic { color: var(--accent); }
 .mock-tag { display: inline-block; font-size: 9px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); border: 1px dashed var(--border); border-radius: 4px; padding: 1px 5px; margin-bottom: 10px; }
+
+/* Age breakdown block */
+.age-block { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+.age-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.age-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.age-total { font-size: 11px; color: var(--muted); }
+.age-total b { color: var(--accent); }
+.age-bar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; gap: 1px; }
+.age-seg { transition: opacity .15s; cursor: default; }
+.age-seg:hover { opacity: .8; }
+.age-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11px; }
+.age-table td { padding: 3px 6px 3px 0; color: var(--muted); }
+.age-table td:nth-child(2), .age-table td:nth-child(3) { text-align: right; color: var(--text); font-weight: 500; }
+.age-dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+
+/* Campaign branding strip */
+.yatra-strip { background: linear-gradient(90deg, #1f4e9b 0%, #1a6dbf 60%, #e87c27 100%);
+  padding: 6px 16px; display: flex; align-items: center; gap: 10px; }
+.yatra-strip .yatra-tag { font-size: 10px; font-weight: 700; letter-spacing: .08em; color: #fff; opacity: .9; text-transform: uppercase; }
+.yatra-strip .yatra-slogan { font-size: 12px; color: #fff; font-style: italic; }
 
 @media (max-width: 760px) {
   .prio-grid, .timeline, .kb-grid { grid-template-columns: 1fr 1fr; }

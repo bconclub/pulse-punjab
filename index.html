@@ -11,10 +11,14 @@
   <div id="app">
     <aside id="sidebar">
       <header>
+        <div class="yatra-strip">
+          <span class="yatra-tag">Punjab Yatra 2026</span>
+          <span class="yatra-slogan">ਪੰਜਾਬੀਅਤ ਦੀ ਲਹਿਰ · Har Pind. Har Shehar.</span>
+        </div>
         <h1>Pulse of Punjab</h1>
-        <p class="sub">117 seats · constituency-wise listening &amp; mobilization</p>
-        <button id="open-program" class="ghost wide">📊 Program overview (P1 · P2 · P3)</button>
-        <button id="open-journey" class="ghost wide">📱 Voter journey demo (scan → call)</button>
+        <p class="sub">ਸਭ ਦੀ ਸੁਣਾਂਗੇ · Sab di sunage — we listen to everyone</p>
+        <button id="open-program" class="ghost wide">Program overview · P1 · P2 · P3</button>
+        <button id="open-journey" class="ghost wide">Voter journey demo · scan → call</button>
       </header>
 
       <div class="controls">
@@ -23,8 +27,20 @@
         <select id="color-mode">
           <option value="engagement">Color: engagement heat</option>
           <option value="result2022">Color: 2022 result (party)</option>
+          <option value="youth">Color: youth density (18-29)</option>
           <option value="priority">Color: priority focus (P1/P2/P3)</option>
           <option value="reserved">Color: General / SC</option>
+        </select>
+        <select id="age-filter">
+          <option value="">All age groups</option>
+          <option value="youth-high">High youth (18-29 ≥ 24%)</option>
+          <option value="18-19">First-time voters (18-19)</option>
+          <option value="20-29">Young adults (20-29)</option>
+          <option value="30-39">Age 30-39</option>
+          <option value="40-49">Age 40-49</option>
+          <option value="50-59">Age 50-59</option>
+          <option value="60-79">Seniors (60-79)</option>
+          <option value="80+">Elders (80+)</option>
         </select>
       </div>
 

@@ -134,8 +134,8 @@ window.PUNJAB = {
 },
   framework: {
   "program": {
-    "name": "Pulse of Punjab",
-    "tagline": "Constituency-wise listening + mobilization for the state",
+    "name": "Punjab Yatra 2026 — Pulse of Punjab",
+    "tagline": "ਸਭ ਦੀ ਸੁਣਾਂਗੇ · Sab di sunage — Constituency-wise listening + mobilization. Punjabiyat Di Lehar. Har Pind. Har Shehar.",
     "horizonMonths": 7,
     "backend": "Proxy (TBD)"
   },

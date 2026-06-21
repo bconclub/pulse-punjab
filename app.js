@@ -52,6 +52,25 @@ function seeded(n, salt) {
   return x - Math.floor(x);
 }
 
+// Age band labels and ECI-aligned demographic base weights for Punjab.
+// Bands: 18-19, 20-29, 30-39, 40-49, 50-59, 60-79, 80+
+const AGE_BANDS = ["18-19", "20-29", "30-39", "40-49", "50-59", "60-79", "80+"];
+// Base % centres (sum ~100); seeded noise shifts each ±3pp per constituency.
+const AGE_BASE_PCT = [4.5, 19.0, 23.5, 21.0, 16.5, 13.0, 2.5];
+const AGE_COLORS   = ["#a8d8ea", "#3bb0e4", "#1f87c7", "#13578a", "#0b3a5e", "#16294f", "#7f8c8d"];
+
+function buildAgeGroups(no) {
+  const totalVoters = 155000 + Math.floor(seeded(no, 20) * 50000); // 155k–205k per AC
+  const raw = AGE_BASE_PCT.map((base, i) => base + (seeded(no, 30 + i) - 0.5) * 6);
+  const sum = raw.reduce((a, b) => a + b, 0);
+  const pcts = raw.map(v => v / sum * 100);
+  const counts = pcts.map(p => Math.round(totalVoters * p / 100));
+  // Adjust last band so counts sum exactly to totalVoters
+  const diff = totalVoters - counts.reduce((a, b) => a + b, 0);
+  counts[counts.length - 1] += diff;
+  return { total: totalVoters, bands: AGE_BANDS.map((label, i) => ({ label, count: counts[i], pct: Math.round(pcts[i] * 10) / 10 })) };
+}
+
 // Mock "pulse" per constituency. Proxy backend swaps this out.
 function buildPulse(c) {
   const base = 40 + Math.floor(seeded(c.no, 1) * 460);     // interactions captured
@@ -61,9 +80,9 @@ function buildPulse(c) {
   const resolved = Math.floor(grievances * (0.3 + seeded(c.no, 5) * 0.6));
   const conversion = Math.floor(seeded(c.no, 6) * 100);    // % engaged -> voter intent
   const engagement = Math.min(100, Math.floor((base / 5) + volunteers * 0.3));
-  // current focus phase from this AC's position in the program (mock spread)
   const phase = ["P1", "P2", "P3"][c.no % 3];
-  return { interactions: base, comments, volunteers, grievances, resolved, conversion, engagement, phase };
+  const age = buildAgeGroups(c.no);
+  return { interactions: base, comments, volunteers, grievances, resolved, conversion, engagement, phase, age };
 }
 
 const map = L.map("map", { zoomControl: false, attributionControl: false, minZoom: 7 })
@@ -92,8 +111,19 @@ function winnerOf(no) {
   return results?.winners?.[no] || null;
 }
 
+// Youth density — green ramp (18-29 % share, range 20%–28% across ACs)
+function youthColor(no) {
+  const age = pulse[no]?.age;
+  if (!age) return "#dfe5ec";
+  const youthPct = age.bands.filter(b => ["18-19","20-29"].includes(b.label)).reduce((s,b) => s + b.pct, 0);
+  const t = Math.min(1, Math.max(0, (youthPct - 20) / 10)); // 20%=0 → 30%=1
+  const stops = ["#f0faf4","#b7e4c7","#74c69d","#40b881","#2d9055","#1a6b3f","#0f4429"];
+  return stops[Math.floor(t * (stops.length - 1))];
+}
+
 function fillFor(c) {
   if (colorMode === "result2022") return partyColor(c.no);
+  if (colorMode === "youth")      return youthColor(c.no);
   if (colorMode === "priority")   return PHASE_COLOR[pulse[c.no]?.phase] || "#ccc";
   if (colorMode === "reserved")   return c.reserved === "SC" ? RESERVED_COLOR.SC : RESERVED_COLOR.GEN;
   return heatColor(pulse[c.no]?.engagement || 0); // engagement (default)
@@ -181,6 +211,7 @@ function renderList(items) {
 function applyFilter() {
   const q = el("search").value.trim().toLowerCase();
   const dist = el("district-filter").value;
+  const ageFil = el("age-filter")?.value || "";
 
   // PIN lookup: if query is a known pincode, jump to its constituency.
   if (/^\d{6}$/.test(q) && pincodes[q]) {
@@ -190,10 +221,20 @@ function applyFilter() {
 
   const items = constituencies.filter(c => {
     if (dist && c.district !== dist) return false;
+    if (ageFil) {
+      const age = pulse[c.no]?.age;
+      if (!age) return false;
+      if (ageFil === "youth-high") {
+        const yPct = age.bands.filter(b => ["18-19","20-29"].includes(b.label)).reduce((s,b) => s + b.pct, 0);
+        if (yPct < 24) return false;
+      } else {
+        const sorted = [...age.bands].sort((a,b) => b.count - a.count);
+        if (!sorted.slice(0,3).some(b => b.label === ageFil)) return false;
+      }
+    }
     if (!q) return true;
     const hay = `${c.no} ${c.name} ${c.district} ${c.lha} ${c.reserved || ""}`.toLowerCase();
     if (hay.includes(q)) return true;
-    // match against pincodes mapped to this AC (starter map + user-entered)
     const userPins = (store[c.no]?.pins || "").toLowerCase();
     if (userPins.includes(q)) return true;
     return Object.entries(pincodes).some(([pin, v]) => v.no === c.no && pin.includes(q));
@@ -238,6 +279,22 @@ function metric(cls, v, k, barPct) {
     barPct != null ? `<div class="bar"><span style="width:${barPct}%"></span></div>` : ""}</div>`;
 }
 
+function renderAgeBar(age) {
+  if (!age) return "";
+  const segments = age.bands.map((b, i) =>
+    `<span class="age-seg" style="width:${b.pct}%;background:${AGE_COLORS[i]}" title="${b.label}: ${b.count.toLocaleString()} (${b.pct}%)"></span>`
+  ).join("");
+  const rows = age.bands.map((b, i) =>
+    `<tr><td><span class="age-dot" style="background:${AGE_COLORS[i]}"></span>${b.label}</td><td>${b.count.toLocaleString()}</td><td>${b.pct}%</td></tr>`
+  ).join("");
+  const youth = age.bands.filter(b => ["18-19","20-29"].includes(b.label)).reduce((s,b) => s + b.pct, 0).toFixed(1);
+  return `<div class="age-block">
+    <div class="age-header"><span class="age-title">Voter age profile</span><span class="age-total">~${(age.total/1000).toFixed(0)}k voters · Youth (18-29): <b>${youth}%</b></span></div>
+    <div class="age-bar">${segments}</div>
+    <table class="age-table">${rows}</table>
+  </div>`;
+}
+
 function renderPulse(no) {
   const p = pulse[no]; if (!p) return;
   el("pulse").innerHTML =
@@ -247,7 +304,8 @@ function renderPulse(no) {
     metric("p2", p.grievances, "Grievances") +
     metric("p2", `${p.resolved}/${p.grievances}`, "Resolved") +
     metric("p3", p.conversion + "%", "Conv. intent", p.conversion) +
-    metric("p2", p.engagement, "Engagement", p.engagement);
+    metric("p2", p.engagement, "Engagement", p.engagement) +
+    renderAgeBar(p.age);
 }
 
 function renderScanFeatures() {
@@ -477,6 +535,7 @@ el("detail-reset").addEventListener("click", () => {
 
 el("search").addEventListener("input", applyFilter);
 el("district-filter").addEventListener("change", applyFilter);
+el("age-filter")?.addEventListener("change", applyFilter);
 
 document.querySelectorAll("#insets button").forEach(b =>
   b.addEventListener("click", () => zoomCluster(b.dataset.cluster)));
@@ -490,6 +549,12 @@ function renderLegend() {
     rows = results.parties.map(p =>
       `<div class="lg-row"><span class="sw" style="background:${p.color}"></span><b>${p.seats}</b><span>${p.name}</span></div>`).join("");
     rows += `<div class="lg-note">Source: ECI results, 10 Mar 2022</div>`;
+  } else if (colorMode === "youth") {
+    title = "Youth density (18-29)";
+    const yStops = ["#f0faf4","#b7e4c7","#74c69d","#2d9055","#0f4429"];
+    const yLabs = ["< 21%","21–23%","23–25%","25–27%","27%+"];
+    rows = yStops.map((c,i) => `<div class="lg-row"><span class="sw" style="background:${c}"></span><span>${yLabs[i]}</span></div>`).join("");
+    rows += `<div class="lg-note">Share of registered voters aged 18–29</div>`;
   } else if (colorMode === "priority") {
     title = "Priority focus";
     rows = [["P1", "Frontline"], ["P2", "Mobilization"], ["P3", "Conversion"]]
