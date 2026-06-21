@@ -4,6 +4,31 @@
  * User-entered details persist in localStorage (key: punjab-ac-details).
  */
 
+// Inline SVG icon set (stroke-based, consistent 2px stroke). No emoji as UI icons.
+const ICON_PATHS = {
+  grid:      '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+  phone:     '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L16 12l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
+  search:    '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+  pin:       '<path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  volunteer: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
+  bell:      '<path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 0 0 4 0"/>',
+  megaphone: '<path d="M3 11v2a1 1 0 0 0 1 1h2l9 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M18 8a4 4 0 0 1 0 8"/>',
+  calendar:  '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/>',
+  clock:     '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  check:     '<path d="M20 6 9 17l-5-5"/>',
+  party:     '<path d="M3 21 9 9l6 6-12 6zM14 8l2-2M18 4l1-1M16 11l2 1M11 5l1 2"/>',
+  back:      '<path d="M15 18l-6-6 6-6"/>',
+  restart:   '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>',
+  whatsapp:  '<path d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3z"/><path d="M8.5 9c0 4 3 6.5 6.5 6.5"/>',
+  book:      '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19a2 2 0 0 1 2-2h13"/>',
+  chart:     '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'
+};
+function icon(name, cls) {
+  const p = ICON_PATHS[name]; if (!p) return "";
+  return `<svg class="ic ${cls || ""}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+}
+const FEATURE_ICON = { volunteer: "volunteer", stay_updated: "bell", share_voice: "megaphone", join_events: "calendar", location: "pin" };
+
 // District centroids [lat, lng]. Replace with per-AC coords when available.
 const DISTRICT_COORDS = {
   "Pathankot":        [32.27, 75.65],
@@ -137,6 +162,11 @@ function renderMarkers() {
 function renderList(items) {
   const list = el("list");
   list.innerHTML = "";
+  if (!items.length) {
+    list.innerHTML = `<li class="empty">${icon("search")}<br>No constituency matches.<br>Try a name, district, or PIN.</li>`;
+    el("count").textContent = `0 of ${constituencies.length} shown`;
+    return;
+  }
   items.forEach(c => {
     const li = document.createElement("li");
     li.dataset.no = c.no;
@@ -219,7 +249,7 @@ function renderPulse(no) {
 function renderScanFeatures() {
   if (!framework) return;
   el("scan-features").innerHTML = framework.scanCard.features
-    .map(f => `<span class="chip">${f.icon} ${f.label}<br><small>${f.desc}</small></span>`).join("");
+    .map(f => `<span class="chip">${icon(FEATURE_ICON[f.id])} <span><b>${f.label}</b><br><small>${f.desc}</small></span></span>`).join("");
 }
 
 function renderGrievanceFlow() {
@@ -251,7 +281,7 @@ function renderProgram() {
   }).join("");
 
   el("prog-scan").innerHTML = framework.scanCard.features
-    .map(f => `<span class="chip">${f.icon} ${f.label}<br><small>${f.desc}</small></span>`).join("");
+    .map(f => `<span class="chip">${icon(FEATURE_ICON[f.id])} <span><b>${f.label}</b><br><small>${f.desc}</small></span></span>`).join("");
 
   el("prog-kb").innerHTML = framework.knowledgeBase.taxonomy
     .map(n => `<div class="kb"><div class="node">${n.node}</div><div class="items">${n.items.join(" · ")}</div></div>`).join("");
@@ -283,17 +313,17 @@ const tag = `<span class="mock-tag">Demo · Proxy wires backend</span>`;
 function jLanding() {
   const c = journeyConstituency();
   screen(`${tag}
-    <div class="scr-hd">📍 ${c.name} · ${c.district}</div>
+    <div class="scr-hd">${icon("pin")} ${c.name} · ${c.district}</div>
     <div class="scr-banner">
       <h3>Pulse of Punjab</h3>
       <p>You scanned in ${c.name}. Pick how you want to take part.</p>
     </div>
     <div class="feat-grid">
       ${framework.scanCard.features.map(f =>
-        `<div class="feat" data-f="${f.id}"><div class="ic">${f.icon}</div><div class="lb">${f.label}</div><div class="ds">${f.desc}</div></div>`
+        `<button class="feat" data-f="${f.id}">${icon(FEATURE_ICON[f.id], "big")}<div class="lb">${f.label}</div><div class="ds">${f.desc}</div></button>`
       ).join("")}
     </div>
-    <button class="btn-link" id="j-restart">↺ restart demo</button>`);
+    <button class="btn-link" id="j-restart">${icon("restart")} restart demo</button>`);
   el("phone-screen").querySelectorAll(".feat").forEach(elm =>
     elm.addEventListener("click", () => jFeature(elm.dataset.f)));
   el("j-restart")?.addEventListener("click", jLanding);
@@ -301,15 +331,15 @@ function jLanding() {
 
 function jFeature(id) {
   if (id === "share_voice") return jVoice();
-  if (id === "volunteer") return jSimple("🙋", "Volunteer signed up", "We'll match you to booth-level work in your area. Expect a WhatsApp ping.");
-  if (id === "stay_updated") return jSimple("🔔", "You're subscribed", "Constituency updates will reach you on WhatsApp.");
+  if (id === "volunteer") return jSimple("volunteer", "Volunteer signed up", "We'll match you to booth-level work in your area. Expect a WhatsApp ping.");
+  if (id === "stay_updated") return jSimple("bell", "You're subscribed", "Constituency updates will reach you on WhatsApp.");
   if (id === "join_events") return jEvents();
-  if (id === "location") return jSimple("📍", "Near you", "Showing booths, events and volunteers around your PIN. (map view)");
+  if (id === "location") return jSimple("pin", "Near you", "Showing booths, events and volunteers around your PIN.");
 }
 
 function jVoice() {
   screen(`${tag}
-    <div class="scr-hd">📣 Share Voice · raise a grievance</div>
+    <div class="scr-hd">${icon("megaphone")} Share Voice · raise a grievance</div>
     <div class="scr-title">What's the issue?</div>
     <div class="scr-field">Category
       <select id="g-cat"><option>Water</option><option>Jobs</option><option>Agriculture</option><option>Roads</option><option>Power</option><option>Drugs</option><option>Other</option></select></div>
@@ -317,8 +347,8 @@ function jVoice() {
       <textarea rows="3" placeholder="Tell us what's wrong…"></textarea></div>
     <div class="scr-field">Your name<input placeholder="Name" /></div>
     <div class="scr-field">Phone<input placeholder="+91…" /></div>
-    <button class="btn-cta" id="g-next">Continue → schedule a call</button>
-    <button class="btn-link" id="g-back">← back</button>`);
+    <button class="btn-cta" id="g-next">Continue to schedule a call</button>
+    <button class="btn-link" id="g-back">${icon("back")} back</button>`);
   el("g-next").addEventListener("click", jSchedule);
   el("g-back").addEventListener("click", jLanding);
 }
@@ -326,12 +356,12 @@ function jVoice() {
 function jSchedule() {
   journeyState.selectedSlot = null;
   screen(`${tag}
-    <div class="scr-hd">🗓 Raise at your convenience</div>
+    <div class="scr-hd">${icon("clock")} Raise at your convenience</div>
     <div class="scr-title">When suits you?</div>
-    <button class="btn-cta" id="call-now">📞 Call me now</button>
-    <button class="btn-alt" id="call-later">⏰ Schedule for later</button>
+    <button class="btn-cta" id="call-now">${icon("phone")} Call me now</button>
+    <button class="btn-alt" id="call-later">${icon("clock")} Schedule for later</button>
     <div id="slot-wrap" style="margin-top:14px"></div>
-    <button class="btn-link" id="s-back">← back</button>`);
+    <button class="btn-link" id="s-back">${icon("back")} back</button>`);
   el("call-now").addEventListener("click", () => jCalling("now"));
   el("call-later").addEventListener("click", () => {
     el("slot-wrap").innerHTML = `<div class="scr-hd">Pick a slot</div>
@@ -353,49 +383,64 @@ function jSchedule() {
 function jCalling(mode) {
   if (mode === "now") {
     screen(`${tag}
-      <div class="confirm-ic">📞</div>
+      <div class="confirm-ic accent">${icon("phone", "xl")}</div>
       <div class="scr-title" style="text-align:center">Connecting your call…</div>
       <p style="text-align:center;color:var(--muted);font-size:13px">Auto-call is dialing a volunteer to reach you now.</p>
       <div style="text-align:center;margin:18px 0"><span class="callpill"><span class="dot"></span>Auto-call in progress</span></div>
       <button class="btn-alt" id="c-done">Mark resolved</button>
-      <button class="btn-link" id="c-home">↺ restart demo</button>`);
+      <button class="btn-link" id="c-home">${icon("restart")} restart demo</button>`);
   } else {
     screen(`${tag}
-      <div class="confirm-ic">✅</div>
+      <div class="confirm-ic ok">${icon("check", "xl")}</div>
       <div class="scr-title" style="text-align:center">Call scheduled</div>
       <p style="text-align:center;color:var(--muted);font-size:13px">Auto-call will dial you at<br><b style="color:var(--text)">${journeyState.selectedSlot}</b></p>
       <div style="text-align:center;margin:18px 0"><span class="callpill"><span class="dot"></span>Queued · grievance logged</span></div>
       <button class="btn-alt" id="c-done">Add to WhatsApp updates</button>
-      <button class="btn-link" id="c-home">↺ restart demo</button>`);
+      <button class="btn-link" id="c-home">${icon("restart")} restart demo</button>`);
   }
-  el("c-done").addEventListener("click", () => jSimple("🎉", "All set", "Grievance is in the pipeline: Raised → Call → Resolve → Convert. You'll get WhatsApp updates."));
+  el("c-done").addEventListener("click", () => jSimple("check", "All set", "Grievance is in the pipeline: Raised, Call, Resolve, Convert. You'll get WhatsApp updates."));
   el("c-home").addEventListener("click", jLanding);
 }
 
 function jEvents() {
   const c = journeyConstituency();
   screen(`${tag}
-    <div class="scr-hd">📅 Events in ${c.name}</div>
+    <div class="scr-hd">${icon("calendar")} Events in ${c.name}</div>
     <div class="scr-title">Join an event</div>
     ${["Booth meet · Sat 10 AM","Youth rally · Sun 5 PM","Door-to-door drive · Mon 9 AM"].map(e =>
       `<button class="btn-alt">${e}</button>`).join("")}
-    <button class="btn-link" id="e-back">← back</button>`);
+    <button class="btn-link" id="e-back">${icon("back")} back</button>`);
   el("e-back").addEventListener("click", jLanding);
   el("phone-screen").querySelectorAll(".btn-alt").forEach(b =>
-    b.addEventListener("click", () => jSimple("📅", "RSVP confirmed", "See you there. Reminder coming on WhatsApp.")));
+    b.addEventListener("click", () => jSimple("calendar", "RSVP confirmed", "See you there. Reminder coming on WhatsApp.")));
 }
 
 function jSimple(ic, title, body) {
   screen(`${tag}
-    <div class="confirm-ic">${ic}</div>
+    <div class="confirm-ic ok">${icon(ic, "xl")}</div>
     <div class="scr-title" style="text-align:center">${title}</div>
     <p style="text-align:center;color:var(--muted);font-size:13px">${body}</p>
-    <button class="btn-cta" id="x-home" style="margin-top:24px">↺ Restart demo</button>`);
+    <button class="btn-cta" id="x-home" style="margin-top:24px">${icon("restart")} Restart demo</button>`);
   el("x-home").addEventListener("click", jLanding);
 }
 
 el("open-journey").addEventListener("click", () => { jLanding(); el("journey").classList.remove("hidden"); });
 el("journey-close").addEventListener("click", () => el("journey").classList.add("hidden"));
+
+// Inject SVG icons into static chrome buttons (no emoji as UI icons).
+el("open-program").innerHTML = icon("chart") + "<span>Program overview</span><small>P1 · P2 · P3</small>";
+el("open-journey").innerHTML = icon("phone") + "<span>Voter journey demo</span><small>scan → call</small>";
+
+// Close overlays on Escape; close on backdrop click.
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    el("program").classList.add("hidden");
+    el("journey").classList.add("hidden");
+    el("detail").classList.add("hidden");
+  }
+});
+["program", "journey"].forEach(id =>
+  el(id).addEventListener("click", (e) => { if (e.target.id === id) el(id).classList.add("hidden"); }));
 
 el("color-mode").addEventListener("change", (e) => { colorMode = e.target.value; renderMarkers(); });
 
@@ -429,12 +474,22 @@ el("detail-reset").addEventListener("click", () => {
 el("search").addEventListener("input", applyFilter);
 el("district-filter").addEventListener("change", applyFilter);
 
-async function init() {
-  [constituencies, pincodes, framework] = await Promise.all([
+async function loadData() {
+  // Prefer inline bundle (data.js) so the app runs on file:// with no server.
+  if (window.PUNJAB) {
+    const d = window.PUNJAB;
+    return [d.constituencies, { ...d.pincodes }, d.framework];
+  }
+  // Fallback to fetch when served over http and bundle absent.
+  return Promise.all([
     fetch("data/constituencies.json").then(r => r.json()),
     fetch("data/pincodes.json").then(r => r.json()),
     fetch("data/framework.json").then(r => r.json())
   ]);
+}
+
+async function init() {
+  [constituencies, pincodes, framework] = await loadData();
   delete pincodes._comment;
 
   constituencies.forEach(c => { pulse[c.no] = buildPulse(c); });
@@ -453,5 +508,5 @@ async function init() {
 init().catch(err => {
   console.error(err);
   document.getElementById("map").innerHTML =
-    '<p style="color:#fff;padding:20px">Failed to load data. Serve over http (see README), not file://</p>';
+    '<p style="color:#fff;padding:20px">Failed to load data. Open index.html directly (data is bundled in data.js), or run <code>node scripts/bundle.cjs</code>.</p>';
 });

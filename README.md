@@ -6,16 +6,20 @@ save it. Search by name, district, or PIN code.
 
 ## Run
 
-`fetch()` needs http, not `file://`. Serve the folder:
+**Easiest: just double-click `index.html`.** Data is bundled into `data.js`, so it
+works straight from `file://` — no server needed (you only need internet for the map tiles).
+
+Optional dev server (for live edits / the fetch path):
 
 ```
-# Python
-python -m http.server 8000
-# or Node
-npx serve .
+python -m http.server 8000   # then open http://localhost:8000
 ```
 
-Then open http://localhost:8000
+If you edit anything in `data/`, regenerate the inline bundle:
+
+```
+node scripts/bundle.cjs
+```
 
 ## Files
 

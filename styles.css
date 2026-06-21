@@ -81,7 +81,22 @@ button.ghost { background: none; color: var(--muted); border: 1px solid var(--bo
 .leaflet-popup-content b { color: var(--accent); }
 .leaflet-container a.leaflet-popup-close-button { color: var(--muted); }
 
-button.wide { width: 100%; margin-top: 10px; text-align: left; }
+/* Icons */
+.ic { width: 18px; height: 18px; flex: 0 0 auto; vertical-align: -3px; }
+.ic.big { width: 26px; height: 26px; }
+.ic.xl { width: 40px; height: 40px; }
+
+/* Focus-visible ring for keyboard users (a11y) */
+:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; border-radius: 6px; }
+
+button.wide {
+  width: 100%; margin-top: 8px; display: flex; align-items: center; gap: 10px;
+  padding: 11px 12px; min-height: 44px; color: var(--text);
+}
+button.wide .ic { color: var(--accent); }
+button.wide span { font-weight: 600; font-size: 13px; }
+button.wide small { margin-left: auto; color: var(--muted); font-size: 11px; }
+button.wide:hover { border-color: var(--accent); }
 
 /* Pulse metrics */
 .pulse-block { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; }
@@ -99,7 +114,8 @@ button.wide { width: 100%; margin-top: 10px; text-align: left; }
 .acc summary { cursor: pointer; padding: 9px 12px; font-size: 12px; color: var(--muted); user-select: none; }
 .acc[open] summary { color: var(--text); border-bottom: 1px solid var(--border); }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 12px; }
-.chip { background: var(--panel); border: 1px solid var(--border); border-radius: 20px; padding: 5px 10px; font-size: 12px; }
+.chip { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 8px 12px; font-size: 12px; display: inline-flex; align-items: center; gap: 8px; line-height: 1.35; }
+.chip .ic { color: var(--accent); }
 .chip small { color: var(--muted); }
 .flow { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 12px; align-items: center; }
 .flow .node { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 5px 9px; font-size: 11px; }
@@ -126,6 +142,19 @@ button.wide { width: 100%; margin-top: 10px; text-align: left; }
 .kb .node { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
 .kb .items { font-size: 11px; color: var(--muted); }
 
+/* Empty state for the list */
+.empty { padding: 28px 16px; text-align: center; color: var(--muted); font-size: 13px; }
+.empty .ic { width: 30px; height: 30px; opacity: .5; margin-bottom: 8px; }
+
+/* Honor reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+}
+
+/* Touch targets >= 44px on the journey controls */
+.btn-cta, .btn-alt, .slot { min-height: 44px; }
+.btn-cta, .btn-alt { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+
 /* Voter journey phone mock */
 .phone { position: relative; width: 340px; max-width: calc(100% - 32px); height: 680px; max-height: calc(100vh - 48px);
   margin: 24px; background: #0b0f14; border: 10px solid #000; border-radius: 36px; box-shadow: 0 20px 60px rgba(0,0,0,.6); overflow: hidden; }
@@ -138,10 +167,10 @@ button.wide { width: 100%; margin-top: 10px; text-align: left; }
 .scr-banner h3 { margin: 0; font-size: 16px; }
 .scr-banner p { margin: 4px 0 0; font-size: 12px; opacity: .9; }
 .feat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.feat { background: var(--panel-2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; text-align: center; cursor: pointer; }
-.feat:hover { border-color: var(--accent); }
-.feat .ic { font-size: 22px; }
-.feat .lb { font-size: 13px; font-weight: 600; margin-top: 6px; }
+.feat { background: var(--panel-2); border: 1px solid var(--border); border-radius: 14px; padding: 16px 12px; text-align: center; cursor: pointer; color: var(--text); min-height: 96px; transition: border-color .15s, transform .15s; }
+.feat:hover { border-color: var(--accent); transform: translateY(-2px); }
+.feat .ic { color: var(--accent); }
+.feat .lb { font-size: 13px; font-weight: 600; margin-top: 8px; }
 .feat .ds { font-size: 10px; color: var(--muted); margin-top: 2px; }
 .scr-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; font-size: 12px; color: var(--muted); }
 .scr-field input, .scr-field textarea, .scr-field select {
@@ -155,7 +184,11 @@ button.wide { width: 100%; margin-top: 10px; text-align: left; }
 .callpill { display: inline-flex; align-items: center; gap: 8px; background: rgba(63,185,80,.12); border: 1px solid #3fb950; color: #3fb950; border-radius: 20px; padding: 8px 14px; font-size: 13px; }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: #3fb950; animation: pulse 1.2s infinite; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-.confirm-ic { font-size: 44px; text-align: center; margin: 30px 0 10px; }
+.confirm-ic { text-align: center; margin: 30px 0 12px; }
+.confirm-ic .ic { width: 56px; height: 56px; padding: 14px; border-radius: 50%; }
+.confirm-ic.accent .ic { color: var(--accent); background: rgba(255,122,24,.12); }
+.confirm-ic.ok .ic { color: #3fb950; background: rgba(63,185,80,.12); }
+.scr-hd .ic { color: var(--accent); }
 .mock-tag { display: inline-block; font-size: 9px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); border: 1px dashed var(--border); border-radius: 4px; padding: 1px 5px; margin-bottom: 10px; }
 
 @media (max-width: 760px) {
