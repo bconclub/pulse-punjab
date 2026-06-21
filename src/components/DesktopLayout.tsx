@@ -93,13 +93,20 @@ export default function DesktopLayout({
           <Stat n={String(districts.length)} l="Districts" />
           <Stat n="71.9%" l="2022 turnout" />
         </View>
-        {activeNo == null && (
+        {activeNo == null ? (
           <View style={styles.mapHint} pointerEvents="none">
             <Feather name="mouse-pointer" size={12} color={colors.textDim} />
             <Txt size={11} dim>
               Tap a seat to zoom in · tap empty space to zoom out
             </Txt>
           </View>
+        ) : (
+          <Pressable style={styles.mapClose} onPress={() => onSelect(-1)}>
+            <Feather name="x" size={18} color={colors.text} />
+            <Txt size={12} weight="semibold">
+              Zoom out
+            </Txt>
+          </Pressable>
         )}
         <View style={styles.legendOverlay} pointerEvents="none">
           <Legend mode={colorMode} />
@@ -221,6 +228,20 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     paddingVertical: 6,
     paddingHorizontal: 12,
+  },
+  mapClose: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    backgroundColor: 'rgba(0,20,52,0.9)',
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.border2,
+    paddingVertical: 8,
+    paddingHorizontal: 13,
   },
   legendOverlay: { position: 'absolute', left: 16, bottom: 18 },
   right: {

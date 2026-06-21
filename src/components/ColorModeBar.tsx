@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, Pressable, StyleSheet } from 'react-native';
+import { View, Pressable, StyleSheet } from 'react-native';
 import { Txt } from './ui';
 import { COLOR_MODES, type ColorMode } from '../lib/geo';
 import { colors, radius } from '../theme';
@@ -11,12 +11,10 @@ export default function ColorModeBar({
   mode: ColorMode;
   onChange: (m: ColorMode) => void;
 }) {
+  // Wrap rather than horizontal-scroll: every mode stays visible (horizontal
+  // scroll is unreachable with a mouse and overflowed the narrow rail).
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.row}
-    >
+    <View style={styles.row}>
       {COLOR_MODES.map((m) => {
         const active = m.id === mode;
         return (
@@ -35,15 +33,15 @@ export default function ColorModeBar({
           </Pressable>
         );
       })}
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { gap: 8, paddingHorizontal: 14, paddingVertical: 2 },
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 7, paddingHorizontal: 14, paddingVertical: 2 },
   chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 13,
+    paddingVertical: 7,
     borderRadius: radius.pill,
     backgroundColor: 'rgba(20,28,42,0.85)',
     borderWidth: 1,
