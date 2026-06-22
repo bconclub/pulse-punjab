@@ -60,10 +60,12 @@ const BBOX: Record<number, Box> = Object.fromEntries(PATHS.map((p) => [p.no, p.b
 
 // Pad a seat bbox; clamp so tiny urban seats don't over-zoom.
 function focusBox(b: Box): Box {
-  const padX = b[2] * 0.6 + 0.02;
-  const padY = b[3] * 0.6 + 0.02;
+  // Generous padding + a larger minimum window => a calmer, less extreme zoom
+  // (keeps neighbours in view and stops tiny seats from filling the whole map).
+  const padX = b[2] * 0.5 + 0.06;
+  const padY = b[3] * 0.5 + 0.06;
   let [x, y, w, h] = [b[0] - padX, b[1] - padY, b[2] + padX * 2, b[3] + padY * 2];
-  const MINW = 0.2, MINH = 0.16;
+  const MINW = 0.5, MINH = 0.4;
   if (w < MINW) { x -= (MINW - w) / 2; w = MINW; }
   if (h < MINH) { y -= (MINH - h) / 2; h = MINH; }
   return [x, y, w, h];
@@ -141,6 +143,32 @@ export default function MapCanvas({ pulse, colorMode, activeNo, onSelect }: Prop
     return () => clearTimeout(rafRef.current);
   }, [activeNo, resizeTick]);
 
+  // Base polygons - memoized so the per-frame zoom animation doesn't re-render
+  // all 117 paths. Round joins/caps soften the low-res jagged corners.
+  const basePaths = useMemo(
+    () =>
+      PATHS.map((p) => {
+        const active = p.no === activeNo;
+        return (
+          <Path
+            key={p.no}
+            d={p.d}
+            fill={hexA(fills[p.no], active ? 0.95 : 0.85)}
+            stroke="rgba(255,255,255,0.28)"
+            strokeWidth={0.0035}
+            strokeLinejoin="round"
+            strokeLinecap="round"
+            onPress={() => onSelect(p.no)}
+          />
+        );
+      }),
+    [fills, activeNo, onSelect],
+  );
+
+  // Active border drawn on top with a width that stays ~constant on screen
+  // (divide by zoom), so it never balloons when zoomed in.
+  const activeD = activeNo != null ? PATHS.find((p) => p.no === activeNo)?.d : null;
+
   return (
     <View style={styles.wrap} ref={wrapRef}>
       <View
@@ -153,21 +181,18 @@ export default function MapCanvas({ pulse, colorMode, activeNo, onSelect }: Prop
         <Svg width="100%" height="100%" viewBox={`0 0 ${VB_W} ${VB_H}`} preserveAspectRatio="xMidYMid meet">
           {/* Background - click empty space to zoom out / deselect */}
           <Rect x={0} y={0} width={VB_W} height={VB_H} fill={colors.mapBg} onPress={() => onSelect(-1)} />
-          <G>
-            {PATHS.map((p) => {
-              const active = p.no === activeNo;
-              return (
-                <Path
-                  key={p.no}
-                  d={p.d}
-                  fill={hexA(fills[p.no], active ? 0.98 : 0.85)}
-                  stroke={active ? colors.accent : 'rgba(255,255,255,0.4)'}
-                  strokeWidth={active ? 0.011 : 0.005}
-                  onPress={() => onSelect(p.no)}
-                />
-              );
-            })}
-          </G>
+          <G>{basePaths}</G>
+          {activeD && (
+            <Path
+              d={activeD}
+              fill="none"
+              stroke={colors.accent}
+              strokeWidth={0.014 / Math.max(cam.s, 0.001)}
+              strokeLinejoin="round"
+              strokeLinecap="round"
+              pointerEvents="none"
+            />
+          )}
         </Svg>
       </View>
     </View>

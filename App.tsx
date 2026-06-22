@@ -123,8 +123,8 @@ export default function App() {
             </Txt>
           </View>
           <View style={styles.headStats}>
-            <MiniStat n={String(constituencies.length)} l="Seats" />
-            <MiniStat n={String(districts.length)} l="Districts" />
+            <MiniStat n={String(constituencies.length)} l="Seats" color={colors.accent} />
+            <MiniStat n={String(districts.length)} l="Districts" color={colors.azure} />
             <Pressable hitSlop={10} style={styles.bell} onPress={bell}>
               <Feather name="bell" size={18} color={colors.textDim} />
             </Pressable>
@@ -200,10 +200,10 @@ function OverlayModal({
   );
 }
 
-function MiniStat({ n, l }: { n: string; l: string }) {
+function MiniStat({ n, l, color }: { n: string; l: string; color: string }) {
   return (
-    <View style={styles.miniStat}>
-      <Txt size={14} weight="bold">
+    <View style={[styles.miniStat, { backgroundColor: color + '24', borderColor: color + '66' }]}>
+      <Txt size={14} weight="bold" color={color}>
         {n}
       </Txt>
       <Txt size={8} faint style={{ letterSpacing: 0.3, marginTop: 1 }}>
@@ -225,14 +225,14 @@ const styles = StyleSheet.create({
   },
   headStats: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   miniStat: {
-    backgroundColor: colors.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingVertical: 5,
-    paddingHorizontal: 9,
+    paddingHorizontal: 6,
     alignItems: 'center',
-    minWidth: 46,
+    justifyContent: 'center',
+    width: 56,
+    height: 40,
   },
   bell: {
     width: 38,

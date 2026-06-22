@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Pressable, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { ScrollView, Pressable, StyleSheet, Platform } from 'react-native';
 import { Txt } from './ui';
 import { COLOR_MODES, type ColorMode } from '../lib/geo';
 import { colors, radius } from '../theme';
@@ -11,10 +11,31 @@ export default function ColorModeBar({
   mode: ColorMode;
   onChange: (m: ColorMode) => void;
 }) {
-  // Wrap rather than horizontal-scroll: every mode stays visible (horizontal
-  // scroll is unreachable with a mouse and overflowed the narrow rail).
+  const ref = useRef<any>(null);
+
+  // On web, translate vertical mouse-wheel into horizontal scroll so the chip
+  // row is scrollable with a normal mouse (not just trackpad/touch).
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !ref.current) return;
+    const node = ref.current.getScrollableNode ? ref.current.getScrollableNode() : ref.current;
+    if (!node || !node.addEventListener) return;
+    const onWheel = (e: any) => {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        node.scrollLeft += e.deltaY;
+        e.preventDefault();
+      }
+    };
+    node.addEventListener('wheel', onWheel, { passive: false });
+    return () => node.removeEventListener('wheel', onWheel);
+  }, []);
+
   return (
-    <View style={styles.row}>
+    <ScrollView
+      ref={ref}
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.row}
+    >
       {COLOR_MODES.map((m) => {
         const active = m.id === mode;
         return (
@@ -33,12 +54,12 @@ export default function ColorModeBar({
           </Pressable>
         );
       })}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 7, paddingHorizontal: 14, paddingVertical: 2 },
+  row: { flexDirection: 'row', gap: 7, paddingHorizontal: 14, paddingVertical: 2 },
   chip: {
     paddingHorizontal: 13,
     paddingVertical: 7,
