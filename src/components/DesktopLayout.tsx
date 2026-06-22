@@ -5,6 +5,7 @@ import { View, Pressable, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Txt } from './ui';
 import HeaderBanner from './HeaderBanner';
+import PulseDot from './PulseDot';
 import TricolorBar from './TricolorBar';
 import MapCanvas from './MapCanvas';
 import ColorModeBar from './ColorModeBar';
@@ -48,10 +49,13 @@ export default function DesktopLayout({
             <Feather name="map-pin" size={15} color={colors.accent} />
           </View>
           <View style={{ flex: 1 }}>
-            <Txt size={15} weight="display">
-              Pulse of Punjab
-            </Txt>
-            <Txt size={10} color={colors.accent} weight="semibold" style={{ letterSpacing: 0.3 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+              <Txt size={15} weight="display">
+                Pulse of Punjab
+              </Txt>
+              <PulseDot size={8} />
+            </View>
+            <Txt size={12.5} color={colors.accent} weight="semibold" style={{ letterSpacing: 0.2, marginTop: 1 }}>
               ਸਭ ਦੀ ਸੁਣਾਂਗੇ · Sab di sunenge
             </Txt>
           </View>
@@ -87,9 +91,10 @@ export default function DesktopLayout({
         </View>
       </View>
 
-      {/* CENTER - map (full-bleed; stats + legend float over it) */}
+      {/* CENTER - map (full-bleed; stats + legend float over it).
+          Desktop highlights the seat (no zoom); detail shows in the right panel. */}
       <View style={styles.center}>
-        <MapCanvas pulse={pulse} colorMode={colorMode} activeNo={activeNo} onSelect={onSelect} />
+        <MapCanvas pulse={pulse} colorMode={colorMode} activeNo={activeNo} onSelect={onSelect} zoomEnabled={false} />
         <View style={styles.statOverlay} pointerEvents="none">
           <Stat n={String(constituencies.length)} l="Seats" />
           <Stat n={String(districts.length)} l="Districts" />
@@ -99,14 +104,14 @@ export default function DesktopLayout({
           <View style={styles.mapHint} pointerEvents="none">
             <Feather name="mouse-pointer" size={12} color={colors.textDim} />
             <Txt size={11} dim>
-              Tap a seat to zoom in · tap empty space to zoom out
+              Tap a seat to highlight it · details on the right
             </Txt>
           </View>
         ) : (
           <Pressable style={styles.mapClose} onPress={() => onSelect(-1)}>
-            <Feather name="x" size={18} color={colors.text} />
+            <Feather name="x" size={16} color={colors.text} />
             <Txt size={12} weight="semibold">
-              Zoom out
+              Clear
             </Txt>
           </Pressable>
         )}

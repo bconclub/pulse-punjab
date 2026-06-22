@@ -18,6 +18,7 @@ type Props = {
   colorMode: ColorMode;
   activeNo: number | null;
   onSelect: (no: number) => void;
+  zoomEnabled?: boolean;
 };
 
 // Geographic bounds across every ring → SVG viewBox (latitude flipped).
@@ -83,7 +84,7 @@ function hexA(hex: string, a: number): string {
   return `${hex.slice(0, 7)}${alpha}`;
 }
 
-export default function MapCanvas({ pulse, colorMode, activeNo, onSelect }: Props) {
+export default function MapCanvas({ pulse, colorMode, activeNo, onSelect, zoomEnabled = true }: Props) {
   const fills = useMemo(() => {
     const m: Record<number, string> = {};
     PATHS.forEach((p) => (m[p.no] = fillFor(p.no, colorMode, pulse)));
@@ -109,7 +110,7 @@ export default function MapCanvas({ pulse, colorMode, activeNo, onSelect }: Prop
     const w = el?.clientWidth || 0;
     const h = el?.clientHeight || 0;
     let target: Cam = IDENTITY;
-    if (w > 0 && h > 0 && activeNo != null && BBOX[activeNo]) {
+    if (zoomEnabled && w > 0 && h > 0 && activeNo != null && BBOX[activeNo]) {
       // SVG content scale under preserveAspectRatio="meet" + centering offset.
       const k = Math.min(w / VB_W, h / VB_H);
       const ox = (w - VB_W * k) / 2;
@@ -141,7 +142,7 @@ export default function MapCanvas({ pulse, colorMode, activeNo, onSelect }: Prop
     };
     step();
     return () => clearTimeout(rafRef.current);
-  }, [activeNo, resizeTick]);
+  }, [activeNo, resizeTick, zoomEnabled]);
 
   // Base polygons - memoized so the per-frame zoom animation doesn't re-render
   // all 117 paths. Round joins/caps soften the low-res jagged corners.

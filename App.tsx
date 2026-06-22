@@ -17,6 +17,7 @@ import { Sora_700Bold } from '@expo-google-fonts/sora';
 
 import { Txt } from './src/components/ui';
 import HeaderBanner from './src/components/HeaderBanner';
+import PulseDot from './src/components/PulseDot';
 import TricolorBar from './src/components/TricolorBar';
 import MapCanvas from './src/components/MapCanvas';
 import ColorModeBar from './src/components/ColorModeBar';
@@ -115,10 +116,16 @@ export default function App() {
         {/* Brand header - compact: title left, stats + bell inline right */}
         <View style={styles.header}>
           <View style={{ flex: 1, paddingRight: 10 }}>
-            <Txt size={16} weight="display">
-              Pulse of Punjab
-            </Txt>
-            <Txt size={10.5} color={colors.accent} weight="semibold" style={{ letterSpacing: 0.3 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Txt size={16} weight="display">
+                Pulse of Punjab
+              </Txt>
+              <PulseDot size={9} />
+              <Txt size={9} weight="bold" color="#2FD08A" style={{ letterSpacing: 0.6 }}>
+                LIVE
+              </Txt>
+            </View>
+            <Txt size={13} color={colors.accent} weight="semibold" style={{ letterSpacing: 0.2, marginTop: 1 }}>
               ਸਭ ਦੀ ਸੁਣਾਂਗੇ · Sab di sunenge
             </Txt>
           </View>

@@ -24,9 +24,10 @@ type Props = {
   colorMode: ColorMode;
   activeNo: number | null;
   onSelect: (no: number) => void;
+  zoomEnabled?: boolean;
 };
 
-export default function MapCanvas({ pulse, colorMode, activeNo, onSelect }: Props) {
+export default function MapCanvas({ pulse, colorMode, activeNo, onSelect, zoomEnabled = true }: Props) {
   const mapRef = useRef<MapView>(null);
   const lastSeatTap = useRef(0);
 
@@ -43,7 +44,7 @@ export default function MapCanvas({ pulse, colorMode, activeNo, onSelect }: Prop
   // Zoom to the selected seat; zoom back out to all of Punjab when cleared.
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) return;
+    if (!map || !zoomEnabled) return;
     if (activeNo != null && byNoCoords[activeNo]) {
       map.fitToCoordinates(byNoCoords[activeNo], {
         edgePadding: { top: 90, right: 70, bottom: 90, left: 70 },
