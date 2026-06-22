@@ -1,4 +1,4 @@
-/** Pulse of Punjab — app root.
+/** Pulse of Punjab - app root.
  *  Desktop (>=960px): 3-pane dashboard (DesktopLayout).
  *  Mobile: brand header + tab nav (Map / Seats / Program / Journey) + detail sheet. */
 import React, { useEffect, useState } from 'react';
@@ -178,7 +178,7 @@ export default function App() {
         </View>
       </SafeAreaView>
 
-      {/* Detail (mobile only — desktop shows it in the right panel) */}
+      {/* Detail (mobile only - desktop shows it in the right panel) */}
       <DetailSheet no={activeNo} pulse={pulse} onClose={() => setActiveNo(null)} />
     </SafeAreaProvider>
   );

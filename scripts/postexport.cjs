@@ -6,7 +6,7 @@ const path = require('path');
 
 const htmlPath = path.join(__dirname, '..', 'dist', 'index.html');
 if (!fs.existsSync(htmlPath)) {
-  console.error('postexport: dist/index.html not found — run `expo export -p web` first.');
+  console.error('postexport: dist/index.html not found - run `expo export -p web` first.');
   process.exit(1);
 }
 

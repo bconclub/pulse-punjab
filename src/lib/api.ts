@@ -1,5 +1,5 @@
 /**
- * API layer — the single seam between the app and its backends.
+ * API layer - the single seam between the app and its backends.
  *
  * Today it serves the bundled datasets and the seeded pulse model so the app is
  * fully functional offline. Flip USE_LOCAL to false (or set EXPO_PUBLIC_API_URL)

@@ -1,4 +1,4 @@
-/** Data-rich district context for the detail panel — real Census 2011 demographics,
+/** Data-rich district context for the detail panel - real Census 2011 demographics,
  *  ECI 2022 turnout, region, issues, economy and the 2024 Lok Sabha MP. */
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
@@ -25,7 +25,7 @@ export default function DistrictIntel({ district, lha }: { district: string; lha
   if (!intel) return null;
   const dm = intel.demographics;
   const ls = lokSabhaFor(lha);
-  const pop = dm ? `${(dm.population / 100000).toFixed(1)}L` : '—';
+  const pop = dm ? `${(dm.population / 100000).toFixed(1)}L` : '-';
 
   return (
     <View style={styles.wrap}>
@@ -42,10 +42,10 @@ export default function DistrictIntel({ district, lha }: { district: string; lha
 
       <View style={styles.grid}>
         <StatCell v={pop} k="Population" />
-        <StatCell v={dm?.literacyPct != null ? `${dm.literacyPct}%` : '—'} k="Literacy" />
-        <StatCell v={dm ? String(dm.sexRatio) : '—'} k="Sex ratio" />
-        <StatCell v={dm ? `${dm.urbanPct}%` : '—'} k="Urban" />
-        <StatCell v={dm?.scPct != null ? `${dm.scPct}%` : '—'} k="SC share" />
+        <StatCell v={dm?.literacyPct != null ? `${dm.literacyPct}%` : '-'} k="Literacy" />
+        <StatCell v={dm ? String(dm.sexRatio) : '-'} k="Sex ratio" />
+        <StatCell v={dm ? `${dm.urbanPct}%` : '-'} k="Urban" />
+        <StatCell v={dm?.scPct != null ? `${dm.scPct}%` : '-'} k="SC share" />
         <StatCell v={`${intel.turnout2022}%`} k="2022 turnout" />
       </View>
 

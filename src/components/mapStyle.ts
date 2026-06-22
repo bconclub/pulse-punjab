@@ -1,4 +1,4 @@
-/** Dark slate Google Maps style — keeps the basemap quiet so the choropleth pops. */
+/** Dark slate Google Maps style - keeps the basemap quiet so the choropleth pops. */
 export const DARK_MAP_STYLE = [
   { elementType: 'geometry', stylers: [{ color: '#0b1018' }] },
   { elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },

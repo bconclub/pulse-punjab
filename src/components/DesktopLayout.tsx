@@ -38,7 +38,7 @@ export default function DesktopLayout({
 }: Props) {
   return (
     <View style={styles.root}>
-      {/* LEFT — nav rail */}
+      {/* LEFT - nav rail */}
       <View style={styles.left}>
         <View style={styles.brandRow}>
           <View style={styles.mark}>
@@ -85,7 +85,7 @@ export default function DesktopLayout({
         </View>
       </View>
 
-      {/* CENTER — map (full-bleed; stats + legend float over it) */}
+      {/* CENTER - map (full-bleed; stats + legend float over it) */}
       <View style={styles.center}>
         <MapCanvas pulse={pulse} colorMode={colorMode} activeNo={activeNo} onSelect={onSelect} />
         <View style={styles.statOverlay} pointerEvents="none">
@@ -113,7 +113,7 @@ export default function DesktopLayout({
         </View>
       </View>
 
-      {/* RIGHT — detail / insights */}
+      {/* RIGHT - detail / insights */}
       <View style={styles.right}>
         <View style={styles.rightHead}>
           <Txt size={11} weight="bold" faint style={{ letterSpacing: 0.6 }}>

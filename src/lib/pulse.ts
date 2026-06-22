@@ -1,4 +1,4 @@
-/** Per-constituency "pulse" metrics. Deterministic seeded mock — the API layer
+/** Per-constituency "pulse" metrics. Deterministic seeded mock - the API layer
  *  swaps this for live backend data without any UI change. Ported from the
  *  original vanilla build so numbers stay stable across the migration. */
 

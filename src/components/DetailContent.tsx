@@ -1,4 +1,4 @@
-/** The constituency detail UI body — reused by the mobile modal (DetailSheet)
+/** The constituency detail UI body - reused by the mobile modal (DetailSheet)
  *  and the desktop right panel. */
 import React from 'react';
 import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
@@ -36,7 +36,7 @@ export default function DetailContent({
   const p = no != null ? pulse[no] : null;
   const w = no != null ? winnerOf(no) : null;
 
-  // Empty state — shown in the desktop right panel before a seat is picked.
+  // Empty state - shown in the desktop right panel before a seat is picked.
   if (!c || !p) {
     return (
       <View style={styles.empty}>

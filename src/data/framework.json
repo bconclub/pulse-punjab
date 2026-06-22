@@ -1,7 +1,7 @@
 {
   "program": {
-    "name": "Punjab Yatra 2026 — Pulse of Punjab",
-    "tagline": "ਸਭ ਦੀ ਸੁਣਾਂਗੇ · Sab di sunage — Constituency-wise listening + mobilization. Punjabiyat Di Lehar. Har Pind. Har Shehar.",
+    "name": "Punjab Yatra 2026 - Pulse of Punjab",
+    "tagline": "ਸਭ ਦੀ ਸੁਣਾਂਗੇ · Sab di sunage - Constituency-wise listening + mobilization. Punjabiyat Di Lehar. Har Pind. Har Shehar.",
     "horizonMonths": 7,
     "backend": "Proxy (TBD)"
   },
@@ -11,7 +11,7 @@
       "id": "P1",
       "name": "Frontline Engagement",
       "color": "#1f6feb",
-      "goal": "Pick up every interaction — chat, comment, DM — on the page and respond.",
+      "goal": "Pick up every interaction - chat, comment, DM - on the page and respond.",
       "kpis": ["interactions_captured", "response_rate", "avg_response_time"],
       "modules": ["listening_tool", "auto_call", "grievance_automation"],
       "listeningScope": {
@@ -24,7 +24,7 @@
       "id": "P2",
       "name": "Cadre Mobilization",
       "color": "#ff7a18",
-      "goal": "Activate and organize the party cadre — booth-level workers, volunteers and frontline karyakartas — into a mapped, deployable ground force.",
+      "goal": "Activate and organize the party cadre - booth-level workers, volunteers and frontline karyakartas - into a mapped, deployable ground force.",
       "kpis": ["cadre_onboarded", "booths_covered", "active_volunteers", "events_held"],
       "modules": ["cadre_network", "booth_mapping", "events", "knowledge_base"]
     },
@@ -32,7 +32,7 @@
       "id": "P3",
       "name": "Voter Conversion",
       "color": "#3fb950",
-      "goal": "Final month — move engaged supporters to confirmed voters.",
+      "goal": "Final month - move engaged supporters to confirmed voters.",
       "kpis": ["pledges", "verified_voters", "turnout_intent"],
       "modules": ["conversion_journey", "whatsapp_flow"]
     }
@@ -41,11 +41,11 @@
   "timeline": [
     { "month": 1, "focus": "P1", "label": "Stand up listening tool, baseline interactions" },
     { "month": 2, "focus": "P1", "label": "Auto-call + grievance automation live" },
-    { "month": 3, "focus": "P2", "label": "Cadre onboarding — booth workers & volunteers mapped" },
+    { "month": 3, "focus": "P2", "label": "Cadre onboarding - booth workers & volunteers mapped" },
     { "month": 4, "focus": "P2", "label": "Booth mapping + knowledge base seeded, events engine" },
     { "month": 5, "focus": "P2", "label": "Per-constituency cadre deployment & pipeline tuning" },
     { "month": 6, "focus": "P3", "label": "Conversion journey warm-up, WhatsApp funnel" },
-    { "month": 7, "focus": "P3", "label": "Voter conversion push — full user journey" }
+    { "month": 7, "focus": "P3", "label": "Voter conversion push - full user journey" }
   ],
 
   "engagement": {

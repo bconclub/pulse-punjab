@@ -1,4 +1,4 @@
-/** The "lehar" — a tricolor (saffron → white → green) gradient strip, the
+/** The "lehar" - a tricolor (saffron → white → green) gradient strip, the
  *  signature accent pulled from the Punjab Yatra deck. */
 import React from 'react';
 import { LinearGradient } from 'expo-linear-gradient';

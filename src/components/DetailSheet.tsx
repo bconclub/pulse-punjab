@@ -1,4 +1,4 @@
-/** Mobile detail — bottom-sheet modal wrapping the shared DetailContent. */
+/** Mobile detail - bottom-sheet modal wrapping the shared DetailContent. */
 import React from 'react';
 import { Modal, View, Pressable, StyleSheet } from 'react-native';
 import DetailContent from './DetailContent';

@@ -1,4 +1,4 @@
-/** Native choropleth — all 117 constituency polygons on a dark map.
+/** Native choropleth - all 117 constituency polygons on a dark map.
  *  Tap a seat to zoom to it; tap empty map to zoom out / deselect. */
 import React, { useEffect, useMemo, useRef } from 'react';
 import { StyleSheet, Platform } from 'react-native';

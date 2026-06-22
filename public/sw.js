@@ -1,4 +1,4 @@
-/* Service worker — enables "install to home screen / desktop" and offline use.
+/* Service worker - enables "install to home screen / desktop" and offline use.
    Strategy:
      - HTML / navigations → network-first (so a fresh deploy shows immediately,
        never a stale shell), falling back to cache when offline.

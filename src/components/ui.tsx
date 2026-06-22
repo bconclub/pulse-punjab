@@ -1,4 +1,4 @@
-/** Shared UI atoms — typography + surfaces tuned to the dark theme. */
+/** Shared UI atoms - typography + surfaces tuned to the dark theme. */
 import React from 'react';
 import { Text, View, TextProps, ViewProps, StyleSheet } from 'react-native';
 import { colors, font, radius } from '../theme';

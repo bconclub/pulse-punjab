@@ -1,9 +1,9 @@
-/** Web map — SVG choropleth of all 117 ACs. react-native-maps is native-only,
+/** Web map - SVG choropleth of all 117 ACs. react-native-maps is native-only,
  *  so on web we project the geojson rings and draw them with react-native-svg.
  *  Click a seat to zoom to it; click empty space to zoom out.
  *
  *  Zoom is applied as a View transform (scale + translate) on a wrapper, not
- *  via the SVG viewBox/<G> transform — react-native-svg only re-renders leaf
+ *  via the SVG viewBox/<G> transform - react-native-svg only re-renders leaf
  *  paint props (fill/stroke), so its own transforms won't animate. A View
  *  transform is plain CSS on web and updates reliably. */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -151,7 +151,7 @@ export default function MapCanvas({ pulse, colorMode, activeNo, onSelect }: Prop
         ]}
       >
         <Svg width="100%" height="100%" viewBox={`0 0 ${VB_W} ${VB_H}`} preserveAspectRatio="xMidYMid meet">
-          {/* Background — click empty space to zoom out / deselect */}
+          {/* Background - click empty space to zoom out / deselect */}
           <Rect x={0} y={0} width={VB_W} height={VB_H} fill={colors.mapBg} onPress={() => onSelect(-1)} />
           <G>
             {PATHS.map((p) => {
