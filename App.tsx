@@ -16,6 +16,7 @@ import {
 import { Sora_700Bold } from '@expo-google-fonts/sora';
 
 import { Txt } from './src/components/ui';
+import HeaderBanner from './src/components/HeaderBanner';
 import TricolorBar from './src/components/TricolorBar';
 import MapCanvas from './src/components/MapCanvas';
 import ColorModeBar from './src/components/ColorModeBar';
@@ -108,6 +109,9 @@ export default function App() {
     <SafeAreaProvider>
       <StatusBar style="light" />
       <SafeAreaView style={styles.app} edges={['top']}>
+        {/* Campaign banner */}
+        <HeaderBanner height={92} />
+        <TricolorBar />
         {/* Brand header */}
         <View style={styles.header}>
           <View style={styles.brand}>
@@ -118,8 +122,8 @@ export default function App() {
               <Txt size={16} weight="display">
                 Pulse of Punjab
               </Txt>
-              <Txt size={10.5} color={colors.accent} weight="semibold" style={{ letterSpacing: 0.3 }}>
-                PUNJAB YATRA 2026 · ਪੰਜਾਬੀਅਤ ਦੀ ਲਹਿਰ
+              <Txt size={11} color={colors.accent} weight="semibold" style={{ letterSpacing: 0.3 }}>
+                ਸਭ ਦੀ ਸੁਣਾਂਗੇ · Sab di sunenge
               </Txt>
             </View>
           </View>
@@ -127,7 +131,6 @@ export default function App() {
             <Feather name="bell" size={18} color={colors.textDim} />
           </Pressable>
         </View>
-        <TricolorBar />
 
         {/* Stat strip (map tab only) */}
         {tab === 'map' && (

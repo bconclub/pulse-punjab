@@ -1,7 +1,7 @@
 {
   "name": "Pulse of Punjab",
   "short_name": "Pulse PB",
-  "description": "Constituency-wise listening and mobilization for Punjab Yatra 2026 - interactive map of all 117 Vidhan Sabha seats.",
+  "description": "Pulse of Punjab · Sab di sunenge - constituency-wise listening and mobilization, interactive map of all 117 Vidhan Sabha seats.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

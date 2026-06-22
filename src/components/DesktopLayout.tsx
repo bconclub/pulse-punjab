@@ -4,6 +4,7 @@ import React from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Txt } from './ui';
+import HeaderBanner from './HeaderBanner';
 import TricolorBar from './TricolorBar';
 import MapCanvas from './MapCanvas';
 import ColorModeBar from './ColorModeBar';
@@ -40,6 +41,8 @@ export default function DesktopLayout({
     <View style={styles.root}>
       {/* LEFT - nav rail */}
       <View style={styles.left}>
+        <HeaderBanner height={84} />
+        <TricolorBar />
         <View style={styles.brandRow}>
           <View style={styles.mark}>
             <Feather name="map-pin" size={15} color={colors.accent} />
@@ -48,15 +51,14 @@ export default function DesktopLayout({
             <Txt size={15} weight="display">
               Pulse of Punjab
             </Txt>
-            <Txt size={9.5} color={colors.accent} weight="semibold" style={{ letterSpacing: 0.3 }}>
-              PUNJAB YATRA 2026
+            <Txt size={10} color={colors.accent} weight="semibold" style={{ letterSpacing: 0.3 }}>
+              ਸਭ ਦੀ ਸੁਣਾਂਗੇ · Sab di sunenge
             </Txt>
           </View>
           <Pressable style={styles.iconBtn} onPress={onBell} hitSlop={8}>
             <Feather name="bell" size={16} color={colors.textDim} />
           </Pressable>
         </View>
-        <TricolorBar />
 
         <View style={styles.cmWrap}>
           <Txt size={10} weight="bold" faint style={{ letterSpacing: 0.6, marginLeft: 16, marginBottom: 6 }}>
