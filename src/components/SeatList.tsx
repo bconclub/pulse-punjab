@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, TextInput, FlatList, Pressable, ScrollView, StyleSheet, Platform } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, TextInput, FlatList, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Txt } from './ui';
 import { constituencies, districts } from '../data';
 import { winnerOf } from '../lib/geo';
+import { useHorizontalScroll } from '../lib/useHorizontalScroll';
 import { party as PARTY, colors, radius } from '../theme';
 
 export default function SeatList({
@@ -15,22 +16,7 @@ export default function SeatList({
 }) {
   const [q, setQ] = useState('');
   const [dist, setDist] = useState('');
-  const distRef = useRef<any>(null);
-
-  // Web: vertical mouse-wheel scrolls the district chips horizontally.
-  useEffect(() => {
-    if (Platform.OS !== 'web' || !distRef.current) return;
-    const node = distRef.current.getScrollableNode ? distRef.current.getScrollableNode() : distRef.current;
-    if (!node || !node.addEventListener) return;
-    const onWheel = (e: any) => {
-      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-        node.scrollLeft += e.deltaY;
-        e.preventDefault();
-      }
-    };
-    node.addEventListener('wheel', onWheel, { passive: false });
-    return () => node.removeEventListener('wheel', onWheel);
-  }, []);
+  const distRef = useHorizontalScroll();
 
   const items = useMemo(() => {
     const query = q.trim().toLowerCase();

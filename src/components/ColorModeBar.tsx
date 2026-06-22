@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from 'react';
-import { ScrollView, Pressable, StyleSheet, Platform } from 'react-native';
+import React from 'react';
+import { ScrollView, Pressable, StyleSheet } from 'react-native';
 import { Txt } from './ui';
 import { COLOR_MODES, type ColorMode } from '../lib/geo';
+import { useHorizontalScroll } from '../lib/useHorizontalScroll';
 import { colors, radius } from '../theme';
 
 export default function ColorModeBar({
@@ -11,29 +12,14 @@ export default function ColorModeBar({
   mode: ColorMode;
   onChange: (m: ColorMode) => void;
 }) {
-  const ref = useRef<any>(null);
-
-  // On web, translate vertical mouse-wheel into horizontal scroll so the chip
-  // row is scrollable with a normal mouse (not just trackpad/touch).
-  useEffect(() => {
-    if (Platform.OS !== 'web' || !ref.current) return;
-    const node = ref.current.getScrollableNode ? ref.current.getScrollableNode() : ref.current;
-    if (!node || !node.addEventListener) return;
-    const onWheel = (e: any) => {
-      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-        node.scrollLeft += e.deltaY;
-        e.preventDefault();
-      }
-    };
-    node.addEventListener('wheel', onWheel, { passive: false });
-    return () => node.removeEventListener('wheel', onWheel);
-  }, []);
+  const ref = useHorizontalScroll();
 
   return (
     <ScrollView
       ref={ref}
       horizontal
       showsHorizontalScrollIndicator={false}
+      style={styles.scroll}
       contentContainerStyle={styles.row}
     >
       {COLOR_MODES.map((m) => {
@@ -59,6 +45,7 @@ export default function ColorModeBar({
 }
 
 const styles = StyleSheet.create({
+  scroll: { flexGrow: 0, flexShrink: 0 },
   row: { flexDirection: 'row', gap: 7, paddingHorizontal: 14, paddingVertical: 2 },
   chip: {
     paddingHorizontal: 13,
