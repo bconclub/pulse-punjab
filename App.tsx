@@ -112,35 +112,24 @@ export default function App() {
         {/* Campaign banner */}
         <HeaderBanner height={92} />
         <TricolorBar />
-        {/* Brand header */}
+        {/* Brand header - compact: title left, stats + bell inline right */}
         <View style={styles.header}>
-          <View style={styles.brand}>
-            <View style={styles.mark}>
-              <Feather name="map-pin" size={16} color={colors.accent} />
-            </View>
-            <View>
-              <Txt size={16} weight="display">
-                Pulse of Punjab
-              </Txt>
-              <Txt size={11} color={colors.accent} weight="semibold" style={{ letterSpacing: 0.3 }}>
-                ਸਭ ਦੀ ਸੁਣਾਂਗੇ · Sab di sunenge
-              </Txt>
-            </View>
+          <View style={{ flex: 1, paddingRight: 10 }}>
+            <Txt size={16} weight="display">
+              Pulse of Punjab
+            </Txt>
+            <Txt size={10.5} color={colors.accent} weight="semibold" style={{ letterSpacing: 0.3 }}>
+              ਸਭ ਦੀ ਸੁਣਾਂਗੇ · Sab di sunenge
+            </Txt>
           </View>
-          <Pressable hitSlop={10} style={styles.bell} onPress={bell}>
-            <Feather name="bell" size={18} color={colors.textDim} />
-          </Pressable>
+          <View style={styles.headStats}>
+            <MiniStat n={String(constituencies.length)} l="Seats" />
+            <MiniStat n={String(districts.length)} l="Districts" />
+            <Pressable hitSlop={10} style={styles.bell} onPress={bell}>
+              <Feather name="bell" size={18} color={colors.textDim} />
+            </Pressable>
+          </View>
         </View>
-
-        {/* Stat strip (map tab only) */}
-        {tab === 'map' && (
-          <View style={styles.statRow}>
-            <Stat n={String(constituencies.length)} l="Seats" />
-            <Stat n={String(districts.length)} l="Districts" />
-            <Stat n="2022" l="Baseline" />
-            <Stat n="ਸਭ ਦੀ" l="ਸੁਣਾਂਗੇ" />
-          </View>
-        )}
 
         {/* Content */}
         <View style={{ flex: 1 }}>
@@ -211,13 +200,13 @@ function OverlayModal({
   );
 }
 
-function Stat({ n, l }: { n: string; l: string }) {
+function MiniStat({ n, l }: { n: string; l: string }) {
   return (
-    <View style={styles.stat}>
-      <Txt size={15} weight="bold">
+    <View style={styles.miniStat}>
+      <Txt size={14} weight="bold">
         {n}
       </Txt>
-      <Txt size={9.5} faint style={{ letterSpacing: 0.4, marginTop: 1 }}>
+      <Txt size={8} faint style={{ letterSpacing: 0.3, marginTop: 1 }}>
         {l.toUpperCase()}
       </Txt>
     </View>
@@ -234,16 +223,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
-  brand: { flexDirection: 'row', alignItems: 'center', gap: 11 },
-  mark: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    backgroundColor: colors.accentDim,
+  headStats: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  miniStat: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: 'rgba(245,166,35,0.35)',
+    borderColor: colors.border,
+    paddingVertical: 5,
+    paddingHorizontal: 9,
     alignItems: 'center',
-    justifyContent: 'center',
+    minWidth: 46,
   },
   bell: {
     width: 38,
@@ -254,16 +243,6 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  statRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingVertical: 10 },
-  stat: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingVertical: 8,
-    alignItems: 'center',
   },
   topOverlay: { position: 'absolute', top: 10, left: 0, right: 0 },
   legendOverlay: { position: 'absolute', left: 12, bottom: 16 },
