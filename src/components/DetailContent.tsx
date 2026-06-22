@@ -107,10 +107,10 @@ export default function DetailContent({
 
       <Divider />
       <Txt size={11} weight="bold" dim style={styles.section}>
-        SCAN-CARD FEATURES
+        VOTER TOUCHPOINTS
       </Txt>
       <View style={styles.chips}>
-        {framework.scanCard.features.map((f: any) => (
+        {framework.engagement.features.map((f: any) => (
           <View key={f.id} style={styles.chip}>
             <Feather name={FEATURE_ICON[f.id] || 'circle'} size={14} color={colors.accent} />
             <Txt size={12} weight="medium">

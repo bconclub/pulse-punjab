@@ -49,7 +49,7 @@ export default function JourneyScreen({ activeNo }: { activeNo: number | null })
             </Txt>
           </View>
           <View style={styles.grid}>
-            {framework.scanCard.features.map((f: any) => (
+            {framework.engagement.features.map((f: any) => (
               <Pressable
                 key={f.id}
                 style={styles.feat}

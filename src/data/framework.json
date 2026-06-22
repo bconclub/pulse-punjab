@@ -22,11 +22,11 @@
     },
     {
       "id": "P2",
-      "name": "Card Mobilization",
+      "name": "Cadre Mobilization",
       "color": "#ff7a18",
-      "goal": "Scan -> card -> action. Convert a scan into a tracked supporter.",
-      "kpis": ["scans", "cards_activated", "volunteers", "events_joined"],
-      "modules": ["scan_card", "knowledge_base", "events"]
+      "goal": "Activate and organize the party cadre — booth-level workers, volunteers and frontline karyakartas — into a mapped, deployable ground force.",
+      "kpis": ["cadre_onboarded", "booths_covered", "active_volunteers", "events_held"],
+      "modules": ["cadre_network", "booth_mapping", "events", "knowledge_base"]
     },
     {
       "id": "P3",
@@ -41,15 +41,15 @@
   "timeline": [
     { "month": 1, "focus": "P1", "label": "Stand up listening tool, baseline interactions" },
     { "month": 2, "focus": "P1", "label": "Auto-call + grievance automation live" },
-    { "month": 3, "focus": "P2", "label": "Scan-card rollout, volunteer onboarding" },
-    { "month": 4, "focus": "P2", "label": "Knowledge base seeded, events engine" },
-    { "month": 5, "focus": "P2", "label": "Pipeline customization per constituency" },
+    { "month": 3, "focus": "P2", "label": "Cadre onboarding — booth workers & volunteers mapped" },
+    { "month": 4, "focus": "P2", "label": "Booth mapping + knowledge base seeded, events engine" },
+    { "month": 5, "focus": "P2", "label": "Per-constituency cadre deployment & pipeline tuning" },
     { "month": 6, "focus": "P3", "label": "Conversion journey warm-up, WhatsApp funnel" },
     { "month": 7, "focus": "P3", "label": "Voter conversion push — full user journey" }
   ],
 
-  "scanCard": {
-    "trigger": "QR scan (poster, card, event, door-to-door)",
+  "engagement": {
+    "trigger": "Voter touchpoint (QR poster, page, event, door-to-door)",
     "features": [
       { "id": "volunteer",   "label": "Volunteer",     "icon": "🙋", "desc": "Sign up to help in your area" },
       { "id": "stay_updated","label": "Stay Updated",  "icon": "🔔", "desc": "Opt in for constituency updates" },
