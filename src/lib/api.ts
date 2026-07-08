@@ -29,7 +29,7 @@ import { grievancesFor } from './grievances';
 export const API_BASE =
   process.env.EXPO_PUBLIC_API_URL ||
   (Constants.expoConfig?.extra as any)?.apiBaseUrl ||
-  '';
+  'https://pop-proxe.vercel.app'; // real PROXe backend default (no env dependency)
 
 // Live only when a backend origin is configured; otherwise bundled/seeded data.
 const USE_LOCAL = !API_BASE;

@@ -52,7 +52,7 @@
       "expo-font"
     ],
     "extra": {
-      "apiBaseUrl": "https://api.punjabyatra.in"
+      "apiBaseUrl": "https://pop-proxe.vercel.app"
     }
   }
 }
