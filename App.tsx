@@ -16,6 +16,7 @@ import {
 import { Sora_700Bold } from '@expo-google-fonts/sora';
 
 import { Txt } from './src/components/ui';
+import AuthGate from './src/components/AuthGate';
 import HeaderBanner from './src/components/HeaderBanner';
 import PulseDot from './src/components/PulseDot';
 import TricolorBar from './src/components/TricolorBar';
@@ -57,6 +58,24 @@ export default function App() {
     Sora_700Bold,
   });
 
+  if (!fontsLoaded) {
+    return (
+      <View style={styles.boot}>
+        <ActivityIndicator color={colors.accent} />
+      </View>
+    );
+  }
+
+  // Login gate wraps the whole experience; in mock mode it's transparent, and
+  // AppInner (with its data fetch) only mounts once authorized.
+  return (
+    <AuthGate>
+      <AppInner />
+    </AuthGate>
+  );
+}
+
+function AppInner() {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 960;
 
@@ -83,14 +102,6 @@ export default function App() {
 
   // no < 0 is the "clear selection" signal from the desktop right panel.
   const select = (no: number) => setActiveNo(no < 0 ? null : no);
-
-  if (!fontsLoaded) {
-    return (
-      <View style={styles.boot}>
-        <ActivityIndicator color={colors.accent} />
-      </View>
-    );
-  }
 
   if (isDesktop) {
     return (

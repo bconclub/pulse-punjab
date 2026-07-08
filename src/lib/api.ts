@@ -31,13 +31,35 @@ export const API_BASE =
   (Constants.expoConfig?.extra as any)?.apiBaseUrl ||
   '';
 
-const API_KEY =
-  process.env.EXPO_PUBLIC_API_KEY ||
-  (Constants.expoConfig?.extra as any)?.apiKey ||
-  '';
-
 // Live only when a backend origin is configured; otherwise bundled/seeded data.
 const USE_LOCAL = !API_BASE;
+
+// ── Session token (login-gated) ──
+// No secret ships in the bundle. The leader logs in with a passcode, which is
+// exchanged server-side for a short-lived token; that token authorizes every
+// request. Persisted in localStorage (web) so a refresh stays logged in.
+const TOKEN_KEY = 'pp_leader_token';
+const TOKEN_EXP_KEY = 'pp_leader_token_exp';
+let sessionToken: string | null = null;
+
+function loadToken(): string | null {
+  if (sessionToken) return sessionToken;
+  try {
+    const t = globalThis.localStorage?.getItem(TOKEN_KEY);
+    const exp = Number(globalThis.localStorage?.getItem(TOKEN_EXP_KEY) || 0);
+    if (t && exp > Date.now()) { sessionToken = t; return t; }
+  } catch {}
+  return null;
+}
+
+export function hasValidSession(): boolean {
+  return !!loadToken();
+}
+
+export function clearSession() {
+  sessionToken = null;
+  try { globalThis.localStorage?.removeItem(TOKEN_KEY); globalThis.localStorage?.removeItem(TOKEN_EXP_KEY); } catch {}
+}
 
 // Category slugs differ between PROXe (grievance_category) and the app
 // (GrievanceCat). Map PROXe → app.
@@ -50,12 +72,13 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 12000);
   try {
+    const token = loadToken();
     const res = await fetch(`${API_BASE}${path}`, {
       ...init,
       signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
-        ...(API_KEY ? { 'x-api-key': API_KEY } : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(init?.headers || {}),
       },
     });
@@ -102,6 +125,34 @@ export let stateTotals: {
 } | null = null;
 
 export const api = {
+  /** Exchange a leader passcode for a session token. Returns true on success. */
+  async authenticate(passcode: string): Promise<boolean> {
+    if (USE_LOCAL) return true; // mock mode needs no login
+    try {
+      const res = await fetch(`${API_BASE}/api/leader/auth`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passcode }),
+      });
+      if (!res.ok) return false;
+      const data = await res.json();
+      if (!data?.ok || !data?.token) return false;
+      sessionToken = data.token;
+      try {
+        globalThis.localStorage?.setItem(TOKEN_KEY, data.token);
+        globalThis.localStorage?.setItem(TOKEN_EXP_KEY, String(Date.now() + (data.expiresInMs || 12 * 3600 * 1000)));
+      } catch {}
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  /** Whether a login is required before data will load. */
+  needsLogin(): boolean {
+    return !USE_LOCAL && !hasValidSession();
+  },
+
   async getConstituencies() {
     return constituencies; // bundled reference data
   },
