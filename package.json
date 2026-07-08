@@ -16,6 +16,7 @@
     "expo-linear-gradient": "~56.0.4",
     "expo-notifications": "~56.0.18",
     "expo-status-bar": "~56.0.4",
+    "leaflet": "^1.9.4",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.85.3",
@@ -26,6 +27,7 @@
     "react-native-web": "^0.21.2"
   },
   "devDependencies": {
+    "@types/leaflet": "^1.9.21",
     "@types/react": "~19.2.2",
     "typescript": "~6.0.3"
   },

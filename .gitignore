@@ -20,3 +20,6 @@ ios/
 
 # pdf render artifacts
 .pdf_pages/
+
+# build skill state
+.claude/state/
