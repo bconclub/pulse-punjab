@@ -1,29 +1,50 @@
 /**
  * API layer - the single seam between the app and its backends.
  *
- * Today it serves the bundled datasets and the seeded pulse model so the app is
- * fully functional offline. Flip USE_LOCAL to false (or set EXPO_PUBLIC_API_URL)
- * and every screen pulls from the real services with zero UI changes.
+ * Reference data (constituencies, results, framework, insights) stays bundled —
+ * it's stable ECI/Census data. The LIVE surfaces (pulse/intensity, grievances,
+ * mood, volunteers) come from PROXe's leader API, and citizen intake POSTs to
+ * PROXe's agent routes.
  *
- * Backends this is designed to fan out to:
- *   - Constituency / results service   (GET /constituencies, /results)
- *   - Pulse / listening firehose       (GET /pulse, /pulse/:no)
- *   - Grievance pipeline               (POST /grievances)
- *   - Engagement / subscribe (WhatsApp)(POST /subscribe)
- *   - Push registration                (POST /devices)
+ * Going live is env-driven: set EXPO_PUBLIC_API_URL (PROXe origin) and
+ * EXPO_PUBLIC_API_KEY (LEADER_API_KEY). With no env set, the app runs fully on
+ * bundled/seeded data (offline demo mode).
+ *
+ * PROXe leader API (all under /api/leader, x-api-key):
+ *   GET  /pulse   → { seats:[{ no, constituency, pulse:{voters,supporters,volunteers,cadre,grievances,resolved,conversion,...} }], totals }
+ *   GET  /issues  → { issues:[{ category, count7d, trend, topConstituencies }], emerging }
+ *   GET  /mood    → { overall, byConstituency }
+ *   GET  /volunteers → { totals, energy, byConstituency }
+ *   GET  /performance → { seats:[{ constituency, score, ... }] }
+ *   POST /recommendations → { ok, id }
+ * PROXe intake (under /api/agent, x-api-key = inbound key):
+ *   POST /leads/inbound  ← grievance + subscribe
  */
 
 import Constants from 'expo-constants';
 import { constituencies, results, framework, byNo } from '../data';
-import { buildPulse, type Pulse } from './pulse';
+import { buildPulse, buildAgeGroups, type Pulse } from './pulse';
 import { grievancesFor } from './grievances';
-
-const USE_LOCAL = true;
 
 export const API_BASE =
   process.env.EXPO_PUBLIC_API_URL ||
   (Constants.expoConfig?.extra as any)?.apiBaseUrl ||
-  'https://api.punjabyatra.in';
+  '';
+
+const API_KEY =
+  process.env.EXPO_PUBLIC_API_KEY ||
+  (Constants.expoConfig?.extra as any)?.apiKey ||
+  '';
+
+// Live only when a backend origin is configured; otherwise bundled/seeded data.
+const USE_LOCAL = !API_BASE;
+
+// Category slugs differ between PROXe (grievance_category) and the app
+// (GrievanceCat). Map PROXe → app.
+const CAT_MAP: Record<string, string> = {
+  jobs: 'unemployment', water: 'water', power: 'power', roads: 'roads',
+  drugs: 'drugs', farm_debt: 'debt', health: 'health', education: 'education', other: 'water',
+};
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const controller = new AbortController();
@@ -32,7 +53,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     const res = await fetch(`${API_BASE}${path}`, {
       ...init,
       signal: controller.signal,
-      headers: { 'Content-Type': 'application/json', ...(init?.headers || {}) },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(API_KEY ? { 'x-api-key': API_KEY } : {}),
+        ...(init?.headers || {}),
+      },
     });
     if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
     return (await res.json()) as T;
@@ -50,39 +75,110 @@ function localPulse(): Record<number, Pulse> {
   return pulseCache;
 }
 
+// Merge a PROXe pulse block into the app's Pulse shape. PROXe supplies the
+// campaign numbers; the age model stays bundled (no per-seat age data yet).
+function mergePulse(no: number, p: any): Pulse {
+  const age = buildAgeGroups(no);
+  return {
+    interactions: p.interactions ?? 0,
+    comments: p.comments ?? 0,
+    volunteers: p.volunteers ?? 0,
+    supporters: p.supporters ?? 0,
+    cadre: p.cadre ?? 0,
+    voters: p.voters ?? 0,
+    grievances: p.grievances ?? 0,
+    resolved: p.resolved ?? 0,
+    conversion: p.conversion ?? 0,
+    engagement: p.engagement ?? 0,
+    phase: (['P1', 'P2', 'P3'] as const)[no % 3],
+    age,
+  };
+}
+
+// State-wide totals cache (leader headline numbers), filled by getPulseAll.
+export let stateTotals: {
+  voters: number; supporters: number; volunteers: number; cadre: number;
+  grievances: number; resolved: number; activeSeats: number;
+} | null = null;
+
 export const api = {
   async getConstituencies() {
-    if (USE_LOCAL) return constituencies;
-    return request<typeof constituencies>('/constituencies');
+    return constituencies; // bundled reference data
   },
 
   async getResults() {
-    if (USE_LOCAL) return results;
-    return request<typeof results>('/results');
+    return results; // bundled reference data
   },
 
   async getFramework() {
-    if (USE_LOCAL) return framework;
-    return request<typeof framework>('/framework');
+    return framework; // bundled reference data
   },
 
-  async getPulseAll() {
+  async getPulseAll(): Promise<Record<number, Pulse>> {
     if (USE_LOCAL) return localPulse();
-    return request<Record<number, Pulse>>('/pulse');
+    try {
+      const data = await request<{ seats: any[]; totals: any }>('/api/leader/pulse?days=30');
+      stateTotals = data.totals || null;
+      const map: Record<number, Pulse> = {};
+      // Seed every seat so the map is complete, then overlay live data.
+      constituencies.forEach((c) => (map[c.no] = mergePulse(c.no, {})));
+      (data.seats || []).forEach((s) => {
+        if (s.no != null && s.pulse) map[s.no] = mergePulse(s.no, s.pulse);
+      });
+      return map;
+    } catch (e) {
+      console.warn('[api] getPulseAll fell back to local:', (e as Error).message);
+      return localPulse();
+    }
   },
 
   async getConstituency(no: number) {
-    if (USE_LOCAL) return { ...byNo[no], pulse: localPulse()[no] };
-    return request<any>(`/constituencies/${no}`);
+    const all = await this.getPulseAll();
+    return { ...byNo[no], pulse: all[no] };
   },
 
   /** Top citizen grievances for a constituency (most-voted first). */
   async getGrievances(no: number) {
     if (USE_LOCAL) return grievancesFor(no, byNo[no]?.district || '');
-    return request<any>(`/constituencies/${no}/grievances`);
+    try {
+      const seat = byNo[no]?.name || '';
+      const data = await request<{ issues: any[] }>(`/api/leader/issues?days=30`);
+      // issues are state-wide; keep those touching this seat, else top state issues.
+      const forSeat = (data.issues || []).filter((i: any) => (i.topConstituencies || []).includes(seat));
+      const src = (forSeat.length ? forSeat : (data.issues || [])).slice(0, 8);
+      const totalReports = src.reduce((s: number, i: any) => s + (i.count7d || 0), 0) || 1;
+      return {
+        total: totalReports,
+        items: src.map((i: any) => ({
+          id: `${i.category}`,
+          category: CAT_MAP[i.category] || 'water',
+          title: (i.category || 'other').replace('_', ' '),
+          votes: i.count7d || 0,
+          pct: Math.round((100 * (i.count7d || 0)) / totalReports),
+          status: 'in_progress' as const,
+          trend: (i.trend > 0 ? 'up' : i.trend < 0 ? 'down' : 'flat') as 'up' | 'down' | 'flat',
+        })),
+      };
+    } catch (e) {
+      console.warn('[api] getGrievances fell back to local:', (e as Error).message);
+      return grievancesFor(no, byNo[no]?.district || '');
+    }
   },
 
-  /** Submit a grievance from the voter-journey flow. */
+  /** Constituency mood (lean split) — for the leader's mood view. */
+  async getMood(no?: number) {
+    if (USE_LOCAL) return null;
+    const seat = no != null ? byNo[no]?.name : undefined;
+    return request<any>(`/api/leader/mood${seat ? `?constituency=${encodeURIComponent(seat)}` : ''}`);
+  },
+
+  /** Volunteer energy (signups + knocks trend, per-seat). */
+  async getVolunteers() {
+    if (USE_LOCAL) return null;
+    return request<any>('/api/leader/volunteers');
+  },
+
+  /** Submit a grievance from the voter-journey flow → PROXe inbound lead. */
   async submitGrievance(payload: {
     no: number;
     category: string;
@@ -92,28 +188,62 @@ export const api = {
     slot?: string;
   }) {
     if (USE_LOCAL) return { ok: true, id: `local-${Date.now()}`, ...payload };
-    return request<{ ok: boolean; id: string }>('/grievances', {
+    const seat = byNo[payload.no];
+    const res = await request<{ leadId?: string }>('/api/leader/intake', {
       method: 'POST',
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        name: payload.name || null,
+        phone: payload.phone || null,
+        constituency: seat?.name || null,
+        district: seat?.district || null,
+        grievance_category: payload.category || null,
+        grievance_text: payload.description || null,
+        engagement_type: 'grievance',
+        note: payload.slot ? `Requested callback slot: ${payload.slot}` : undefined,
+      }),
     });
+    return { ok: true, id: res.leadId || `remote-${Date.now()}` };
   },
 
-  /** Opt a voter into WhatsApp / constituency updates. */
+  /** Opt a voter into updates → PROXe inbound lead (subscribe/info). */
   async subscribe(payload: { no: number; phone?: string; channel: string }) {
     if (USE_LOCAL) return { ok: true };
-    return request<{ ok: boolean }>('/subscribe', {
+    const seat = byNo[payload.no];
+    await request('/api/leader/intake', {
       method: 'POST',
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        phone: payload.phone || null,
+        constituency: seat?.name || null,
+        district: seat?.district || null,
+        engagement_type: 'info',
+        note: `Subscribed to updates via ${payload.channel}`,
+      }),
     });
+    return { ok: true };
+  },
+
+  /** Register a voter action (volunteer / join-event) → PROXe inbound lead. */
+  async registerAction(payload: { no: number; action: 'volunteer' | 'event'; phone?: string; name?: string }) {
+    if (USE_LOCAL) return { ok: true };
+    const seat = byNo[payload.no];
+    await request('/api/leader/intake', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: payload.name || null,
+        phone: payload.phone || null,
+        constituency: seat?.name || null,
+        district: seat?.district || null,
+        engagement_type: payload.action === 'volunteer' ? 'volunteer' : 'event',
+        action_intent: payload.action === 'volunteer' ? 'volunteer' : 'rally',
+      }),
+    });
+    return { ok: true };
   },
 
   /** Register this device's push token with the backend. */
   async registerDevice(payload: { token: string; platform: string; no?: number }) {
-    if (USE_LOCAL) return { ok: true };
-    return request<{ ok: boolean }>('/devices', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
+    // No PROXe device route yet — no-op until push is wired.
+    return { ok: true };
   },
 };
 

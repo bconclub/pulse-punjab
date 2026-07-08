@@ -11,6 +11,11 @@ export type Pulse = {
   interactions: number;
   comments: number;
   volunteers: number;
+  // Intensity ladder counts from PROXe (voters → supporters → volunteers →
+  // cadre). Optional so the seeded mock (which omits them) still type-checks.
+  supporters?: number;
+  cadre?: number;
+  voters?: number;
   grievances: number;
   resolved: number;
   conversion: number;

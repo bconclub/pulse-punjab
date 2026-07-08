@@ -45,6 +45,9 @@ const TABS: { id: Tab; label: string; icon: any }[] = [
 
 const bell = () => sendLocal('Pulse of Punjab', 'Notifications are live on this device. ✓');
 
+// Compact number for headline stats (1200 → "1.2k").
+const fmt = (n: number): string => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k` : String(n));
+
 export default function App() {
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
@@ -62,6 +65,16 @@ export default function App() {
   const [pulse, setPulse] = useState<Record<number, Pulse>>({});
   const [activeNo, setActiveNo] = useState<number | null>(null);
   const [overlay, setOverlay] = useState<null | 'program' | 'journey'>(null);
+
+  // State-wide intensity headline — sums the live per-seat pulse.
+  const totals = React.useMemo(() => {
+    let volunteers = 0, supporters = 0;
+    Object.values(pulse).forEach((p) => {
+      volunteers += p.volunteers || 0;
+      supporters += p.supporters || 0;
+    });
+    return { volunteers, supporters };
+  }, [pulse]);
 
   useEffect(() => {
     api.getPulseAll().then(setPulse);
@@ -130,8 +143,17 @@ export default function App() {
             </Txt>
           </View>
           <View style={styles.headStats}>
-            <MiniStat n={String(constituencies.length)} l="Seats" color={colors.accent} />
-            <MiniStat n={String(districts.length)} l="Districts" color={colors.azure} />
+            {totals.supporters > 0 || totals.volunteers > 0 ? (
+              <>
+                <MiniStat n={fmt(totals.supporters)} l="Support" color={colors.accent} />
+                <MiniStat n={fmt(totals.volunteers)} l="Volunteers" color={colors.azure} />
+              </>
+            ) : (
+              <>
+                <MiniStat n={String(constituencies.length)} l="Seats" color={colors.accent} />
+                <MiniStat n={String(districts.length)} l="Districts" color={colors.azure} />
+              </>
+            )}
             <Pressable hitSlop={10} style={styles.bell} onPress={bell}>
               <Feather name="bell" size={18} color={colors.textDim} />
             </Pressable>
